@@ -1171,17 +1171,30 @@ function drawAimCursor(){
 function drawCueStick(){
   if(!cueBall||aimAngle===null||state==='animating') return;
 
-  // Pull cue back slightly while charging to show wind-up
-  const pullback = charging ? (chargedPower/100) * 14 : 0;
+  // Pull cue back dramatically while charging — max 30px so it's very visible
+  const pullback = charging ? (chargedPower/100) * 30 : 0;
   const ang=aimAngle+Math.PI, s0=BALL_R+8+pullback, sLen=100;
   const sx=cueBall.x+Math.cos(ang)*s0, sy=cueBall.y+Math.sin(ang)*s0;
   const ex=cueBall.x+Math.cos(ang)*(s0+sLen), ey=cueBall.y+Math.sin(ang)*(s0+sLen);
 
+  // While charging: tint the cue warmer/brighter to signal it's loaded
+  const chargeGlow = charging ? chargedPower/100 : 0;
   const g=ctx.createLinearGradient(sx,sy,ex,ey);
-  g.addColorStop(0,'#e0b060');
+  g.addColorStop(0, charging ? `rgba(255,${Math.round(176+chargeGlow*60)},${Math.round(60-chargeGlow*60)},1)` : '#e0b060');
   g.addColorStop(0.3,'#8b5e18');
   g.addColorStop(0.8,'#4a2e08');
   g.addColorStop(1,'#1a0c02');
+
+  // Glow behind cue while charging
+  if(charging && chargedPower > 10){
+    ctx.save();
+    ctx.shadowBlur = 12 + chargeGlow*14;
+    ctx.shadowColor = `rgba(255,${Math.round(160-chargeGlow*80)},30,${0.3+chargeGlow*0.5})`;
+    ctx.strokeStyle=g; ctx.lineWidth=4.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+    ctx.restore();
+  }
+
   ctx.strokeStyle=g; ctx.lineWidth=4.5; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
 
@@ -1193,6 +1206,59 @@ function drawCueStick(){
 
   // Draw power bar alongside the cue stick only while actively charging
   if(charging) drawPowerBar();
+
+  // Draw "hold to shoot" idle hint when NOT charging yet
+  if(!charging && state==='aiming') drawAimHint();
+}
+
+// Pulsing hint drawn near cue ball when player is in aiming state but hasn't clicked yet
+let hintPulse = 0;
+let hintRaf = null;
+function startHintPulse(){
+  if(hintRaf) return; // already running
+  function loop(){ hintRaf=requestAnimationFrame(loop); render(); }
+  hintRaf=requestAnimationFrame(loop);
+}
+function stopHintPulse(){
+  if(hintRaf){ cancelAnimationFrame(hintRaf); hintRaf=null; }
+}
+function drawAimHint(){
+  if(!cueBall) return;
+  hintPulse = (hintPulse + 0.04) % (Math.PI*2);
+  const pulse = 0.55 + 0.45*Math.sin(hintPulse);
+
+  const ang = aimAngle + Math.PI;
+  // Position hint text below the cue butt end
+  const hx = cueBall.x + Math.cos(ang)*(BALL_R+60);
+  const hy = cueBall.y + Math.sin(ang)*(BALL_R+60);
+
+  ctx.save();
+  ctx.globalAlpha = 0.55 + 0.45*Math.sin(hintPulse);
+
+  // Pill background
+  const label = '▼ hold to shoot';
+  ctx.font = "bold 9px 'DM Mono',monospace";
+  const tw = ctx.measureText(label).width;
+  const pw = tw+18, ph = 18, pr = 9;
+  const px = hx - pw/2, py = hy - ph/2;
+
+  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.beginPath();
+  ctx.roundRect(px, py, pw, ph, pr);
+  ctx.fill();
+
+  ctx.strokeStyle=`rgba(201,168,76,${0.4+0.4*pulse})`;
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.roundRect(px, py, pw, ph, pr);
+  ctx.stroke();
+
+  ctx.fillStyle=`rgba(220,195,110,${0.75+0.25*pulse})`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(label, hx, hy);
+
+  ctx.restore();
 }
 
 function drawPowerBar(){
@@ -1410,6 +1476,7 @@ function resetAll(){
   selectedPocket=null; aimAngle=null; shootAngle=null; animState=null;
   if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
   dragging=false; charging=false; chargedPower=0;
+  stopHintPulse(); hintPulse=0;
   setStep(1);
   setMsg('<strong>Click the table</strong> to place the object ball anywhere on the felt.');
   cardHide('pocket-card'); cardHide('aim-card'); cardHide('result-card');
@@ -1426,6 +1493,7 @@ function softReset(){
   ghostBall=null; cueBall=null; animState=null;
   selectedPocket=null; aimAngle=null; shootAngle=null;
   dragging=false; charging=false; chargedPower=0;
+  stopHintPulse(); hintPulse=0;
   state='placing_obj'; setStep(2); startBlink();
   setMsg('<strong>Drag the ball</strong> to reposition, then choose a pocket to lock in.');
   cardHide('pocket-card'); cardHide('aim-card'); cardHide('result-card');
@@ -1488,6 +1556,7 @@ function undoStep(){
 
   } else if(state==='aiming'){
     // Undo: placed cue ball → go back to ready_cueball
+    stopHintPulse(); hintPulse=0;
     charging=false; chargedPower=0;
     cueBall=null; aimAngle=null;
     state='ready_cueball'; setStep(4);
@@ -1562,11 +1631,13 @@ function onDown(e){
     aimAngle=ghostBall?Math.atan2(ghostBall.y-cueBall.y,ghostBall.x-cueBall.x):0;
     canvas.style.cursor='crosshair';
     setUndo(true, 'Place the cue ball again');
+    startHintPulse();
     render(); return;
   }
 
   if(state==='aiming'){
     // Start charging — shoot happens on mouseup
+    stopHintPulse();
     charging=true; chargedPower=0; chargeStart=Date.now();
     // Kick off a render loop while charging so the bar animates
     (function chargeLoop(){
