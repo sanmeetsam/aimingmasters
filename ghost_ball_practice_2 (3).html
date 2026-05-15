@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost Ball Method — Pool Practice Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:       #c9a84c;
+  --gold-light: #e8cc7a;
+  --gold-dim:   #7a6030;
+  --gold-glow:  rgba(201,168,76,0.18);
+  --felt:       #0f5c2e;
+  --felt-mid:   #0d5128;
+  --felt-dark:  #0a3d1e;
+  --cushion:    #1f7a45;
+  --rail:       #2c1505;
+  --rail-dark:  #180b02;
+  --bg:         #0c0b10;
+  --surface:    #13111a;
+  --surface2:   #1a1825;
+  --surface3:   #201e2c;
+  --border:     rgba(201,168,76,0.12);
+  --border2:    rgba(201,168,76,0.22);
+  --text:       #d8d0c0;
+  --text-dim:   #6a6258;
+  --text-mute:  #3a3630;
+  --white-ball: #f5f4f0;
+  --obj-ball:   #e8c040;
+  --blue-line:  #4ab0ff;
+  --green-line: #4ecb7a;
+  --radius:     14px;
+  --radius-sm:  8px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  font-family: 'Crimson Pro', Georgia, serif;
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Subtle grain overlay */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.028;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ─────────────────────────────────────── */
+header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+header::before, header::after {
+  content:'';
+  position:absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  border-top: 1px solid var(--gold-dim);
+  width: 440px;
+  opacity: 0.4;
+}
+header::before { top: 8px; }
+header::after  { top: 38px; }
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+}
+.header-deco {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim));
+  opacity: 0.5;
+}
+.header-deco.r { background: linear-gradient(to left, transparent, var(--gold-dim)); }
+.header-titles { text-align: center; }
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gold-light);
+  line-height: 1;
+}
+.tagline {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+/* ── PANELS ─────────────────────────────────────── */
+.panel {
+  width: 186px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 15px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+.card-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.card-label::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background: var(--border2);
+}
+
+/* ── STEP TRACKER ───────────────────────────────── */
+.steps { display:flex; flex-direction:column; gap:4px; }
+.step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  opacity: 0.28;
+  cursor: default;
+}
+.step.active {
+  opacity: 1;
+  background: linear-gradient(90deg, rgba(201,168,76,0.1), transparent);
+  border-left: 2px solid var(--gold);
+}
+.step.done { opacity: 0.55; }
+.step-pip {
+  width: 19px; height: 19px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  font-weight: 400;
+  flex-shrink: 0;
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+.step.active .step-pip {
+  background: var(--gold);
+  color: var(--bg);
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(201,168,76,0.4);
+}
+.step.done .step-pip {
+  background: #1a4a2e;
+  color: #5ec87a;
+  border-color: #2a6e44;
+}
+.step-text {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.8rem;
+  color: var(--text);
+  font-style: italic;
+}
+
+/* ── INSTRUCTION BOX ────────────────────────────── */
+.instruction {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #9a9285;
+  min-height: 52px;
+  border: 1px solid var(--border);
+  font-style: italic;
+}
+.instruction strong { color: var(--text); font-style: normal; font-weight: 400; }
+
+/* ── POCKET SELECTOR ────────────────────────────── */
+.pocket-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.p-btn {
+  padding: 8px 6px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--text-dim);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+.p-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: var(--gold-glow);
+}
+.p-btn.selected {
+  background: var(--gold);
+  color: var(--bg);
+  border-color: var(--gold);
+  font-style: normal;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(201,168,76,0.3);
+}
+
+/* ── AIM ANGLE ──────────────────────────────────── */
+.angle-wrap {
+  text-align: center;
+  padding: 4px 0 2px;
+}
+.angle-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  color: var(--gold-light);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(201,168,76,0.3);
+  transition: color 0.3s;
+}
+.angle-val.good { color: #5ec87a; text-shadow: 0 0 20px rgba(94,200,122,0.3); }
+.angle-val.bad  { color: #e06060; text-shadow: 0 0 20px rgba(224,96,96,0.3); }
+.angle-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-top: 3px;
+}
+
+/* ── CANVAS POWER BAR ───────────────────────────── */
+/* Drawn on-canvas via JS — no HTML needed */
+
+/* ── RESULT ─────────────────────────────────────── */
+.result-wrap { text-align: center; padding: 4px 0; }
+.result-icon { font-size: 1.8rem; margin-bottom: 4px; }
+.result-grade {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--gold-light);
+  margin-bottom: 3px;
+}
+.result-detail {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+/* ── LEGEND ─────────────────────────────────────── */
+.legend { display: flex; flex-direction: column; gap: 6px; }
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--text-dim);
+}
+.leg-dot  { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.leg-dash { width:14px; height:2px; flex-shrink:0; border-radius:1px; }
+
+/* ── UNDO BUTTON ────────────────────────────────── */
+.undo-btn {
+  width: 100%;
+  padding: 9px 10px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: var(--radius-sm);
+  color: var(--gold-light);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  font-style: italic;
+  cursor: pointer;
+  transition: opacity 0.25s, transform 0.25s, border-color 0.22s, color 0.22s, background 0.22s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+}
+.undo-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.undo-btn:hover {
+  border-color: var(--gold);
+  color: #fff8e8;
+  background: rgba(201,168,76,0.16);
+}
+.undo-btn svg { opacity: 0.8; flex-shrink: 0; transition: transform 0.3s, opacity 0.22s; }
+.undo-btn:hover svg { transform: scaleX(-1) rotate(30deg); opacity: 1; }
+
+/* ── RESET BUTTON ───────────────────────────────── */
+.reset-btn {
+  width: 100%;
+  padding: 11px 9px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--gold);
+  font-family: 'Playfair Display', serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.22s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.reset-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: rgba(201,168,76,0.13);
+  box-shadow: 0 0 16px rgba(201,168,76,0.12);
+}
+.reset-btn svg { opacity: 0.8; transition: transform 0.35s, opacity 0.22s; }
+.reset-btn:hover svg { transform: rotate(-90deg); opacity:1; }
+
+/* ── TABLE AREA ─────────────────────────────────── */
+.table-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.table-frame {
+  /* Outer wood frame */
+  background: radial-gradient(ellipse at 30% 20%, #3a1e08, #1a0c02);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow:
+    0 0 0 1px #0a0500,
+    0 0 0 5px #2a1205,
+    0 0 0 6px #3d1a08,
+    inset 0 1px 0 rgba(255,200,100,0.08),
+    0 20px 60px rgba(0,0,0,0.9),
+    0 4px 16px rgba(0,0,0,0.7);
+  position: relative;
+}
+/* Wood grain lines on frame */
+.table-frame::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius: 18px;
+  background: repeating-linear-gradient(
+    88deg,
+    transparent 0px,
+    transparent 6px,
+    rgba(255,160,60,0.012) 6px,
+    rgba(255,160,60,0.012) 7px
+  );
+  pointer-events:none;
+}
+
+canvas {
+  display: block;
+  border-radius: 3px;
+  cursor: crosshair;
+}
+
+/* ── DRAG HINT PILL ─────────────────────────────── */
+.drag-pill {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--gold);
+  color: var(--bg);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.52rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s, transform 0.4s;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(201,168,76,0.4);
+}
+.drag-pill.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── CARD VISIBILITY ────────────────────────────── */
+.card[data-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.card[data-hidden="false"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+/* ── ONBOARDING POPUP ─────────────────────────────── */
+.popup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(6,5,12,0.82);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.35s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.popup {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  width: 480px;
+  max-width: 92vw;
+  padding: 36px 38px 30px;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 30px 80px rgba(0,0,0,0.8);
+  animation: slideUp 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+.popup::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:18px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 55%);
+  pointer-events:none;
+}
+
+.popup-icon {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.popup-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: var(--gold-light);
+  text-align: center;
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+}
+
+.popup-subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.popup-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border2), transparent);
+  margin-bottom: 20px;
+}
+
+.popup-purpose {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+  color: #9a9285;
+  line-height: 1.7;
+  font-style: italic;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.popup-purpose strong { color: var(--text); font-style: normal; }
+
+.popup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 24px;
+}
+
+.popup-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.83rem;
+  color: #8a8278;
+  font-family: 'Crimson Pro', serif;
+  line-height: 1.5;
+}
+
+.popup-step-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--bg);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  box-shadow: 0 0 8px rgba(201,168,76,0.3);
+}
+
+.popup-step strong { color: var(--text); font-weight: 400; }
+
+.popup-tip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--gold);
+  border-radius: 0 6px 6px 0;
+  padding: 9px 12px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: #7a7068;
+  margin-bottom: 22px;
+  line-height: 1.6;
+}
+.popup-tip strong { color: var(--gold); font-style: normal; }
+
+.popup-start-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--gold);
+  border: none;
+  border-radius: 9px;
+  color: var(--bg);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+}
+.popup-start-btn:hover {
+  background: var(--gold-light);
+  box-shadow: 0 6px 28px rgba(201,168,76,0.4);
+  transform: translateY(-1px);
+}
+
+.popup-overlay.hiding {
+  animation: fadeOut 0.25s ease forwards;
+}
+@keyframes fadeOut { to{opacity:0} }
+
+/* ── BALL COLOUR PICKER ───────────────────────────── */
+.colour-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+  margin-top: 2px;
+}
+.colour-swatch {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+.colour-swatch:hover { transform: scale(1.18); }
+.colour-swatch.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(201,168,76,0.5);
+  transform: scale(1.1);
+}
+/* Sheen overlay on swatch to look ball-like */
+.colour-swatch::after {
+  content:'';
+  position:absolute;
+  top: 4px; left: 6px;
+  width: 7px; height: 5px;
+  background: rgba(255,255,255,0.45);
+  border-radius: 50%;
+  pointer-events:none;
+}
+
+</style>
+<script>
+function closePopup(){
+  var overlay = document.getElementById('popup-overlay');
+  if(!overlay) return;
+  overlay.style.transition = 'opacity 0.22s';
+  overlay.style.opacity = '0';
+  overlay.style.pointerEvents = 'none';
+  setTimeout(function(){ overlay.style.display = 'none'; }, 230);
+}
+</script>
+</head>
+
+<!-- ═══ ONBOARDING POPUP ═══ -->
+<div class="popup-overlay" id="popup-overlay">
+  <div class="popup">
+    <div class="popup-icon">🎱</div>
+    <div class="popup-title">Ghost Ball Method</div>
+    <div class="popup-subtitle">Pool Practice Trainer</div>
+    <div class="popup-divider"></div>
+    <p class="popup-purpose">
+      The <strong>ghost ball method</strong> is the most effective aiming system in pool.
+      It teaches you to visualise an imaginary ball at the exact contact point —
+      then send your cue ball there perfectly.
+    </p>
+    <div class="popup-steps">
+      <div class="popup-step">
+        <div class="popup-step-num">1</div>
+        <span><strong>Place the object ball</strong> anywhere on the table by clicking</span>
+      </div>
+      <div class="popup-step">
+        <div class="popup-step-num">2</div>
+        <span><strong>Choose a target pocket</strong> from the panel on the right</span>
+      </div>
+      <div class="popup-step">
+        <div class="popup-step-num">3</div>
+        <span>The <strong>ghost ball</strong> appears — the exact spot your cue ball must reach</span>
+      </div>
+      <div class="popup-step">
+        <div class="popup-step-num">4</div>
+        <span><strong>Place your cue ball</strong>, aim at the ghost ball, and shoot</span>
+      </div>
+      <div class="popup-step">
+        <div class="popup-step-num">5</div>
+        <span>After a miss, <strong>drag the ball</strong> to try from a new position</span>
+      </div>
+    </div>
+    <div class="popup-tip">
+      💡 <strong>Pro tip:</strong> Move your mouse further from the cue ball for finer angle control. The angle display shows your precision in real time.
+    </div>
+    <button class="popup-start-btn" onclick="closePopup()">Start Practicing</button>
+  </div>
+</div>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-deco"></div>
+    <div class="header-titles">
+      <h1>Ghost Ball Method</h1>
+      <p class="tagline">8-Ball Pool Practice Trainer</p>
+    </div>
+    <div class="header-deco r"></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ═══ LEFT PANEL ═══ -->
+  <div class="panel">
+
+    <div class="card">
+      <div class="card-label">How to Play</div>
+      <div class="steps">
+        <div class="step active" id="s1">
+          <div class="step-pip">1</div>
+          <span class="step-text">Place object ball</span>
+        </div>
+        <div class="step" id="s2">
+          <div class="step-pip">2</div>
+          <span class="step-text">Choose pocket</span>
+        </div>
+        <div class="step" id="s3">
+          <div class="step-pip">3</div>
+          <span class="step-text">Ghost ball appears</span>
+        </div>
+        <div class="step" id="s4">
+          <div class="step-pip">4</div>
+          <span class="step-text">Place cue ball</span>
+        </div>
+        <div class="step" id="s5">
+          <div class="step-pip">5</div>
+          <span class="step-text">Aim &amp; shoot</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Current Step</div>
+      <div class="instruction" id="instruction">
+        <strong>Click the table</strong> to place the object ball anywhere on the felt.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Legend</div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#e8c040;border:1.5px solid #8a6000"></div>Object ball</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,0.12);border:1.5px dashed #888"></div>Ghost ball</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f0ede8;border:1.5px solid #bbb"></div>Cue ball</div>
+        <div class="leg-item"><div class="leg-dash" style="background:#4ab0ff"></div>Aim line</div>
+        <div class="leg-item"><div class="leg-dash" style="background:#c9a84c"></div>Object path</div>
+        <div class="leg-item"><div class="leg-dash" style="background:#4ecb7a"></div>Ideal approach</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Ball Colour</div>
+      <div class="colour-grid" id="colour-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══ TABLE ═══ -->
+  <div class="table-wrap">
+    <div class="table-frame">
+      <canvas id="table" width="310" height="590"></canvas>
+    </div>
+    <div class="drag-pill" id="drag-pill">✦ Drag to reposition</div>
+  </div>
+
+  <!-- ═══ RIGHT PANEL ═══ -->
+  <div class="panel">
+
+    <div class="card" id="pocket-card" data-hidden="true">
+      <div class="card-label">Target Pocket</div>
+      <div class="pocket-grid" id="pocket-btns"></div>
+    </div>
+
+    <div class="card" id="aim-card" data-hidden="true">
+      <div class="card-label">Aim Angle</div>
+      <div class="angle-wrap">
+        <div class="angle-val" id="angle-val">—</div>
+        <div class="angle-sub">degrees from ideal</div>
+      </div>
+    </div>
+
+    <div class="card" id="result-card" data-hidden="true">
+      <div class="card-label">Shot Result</div>
+      <div class="result-wrap" id="result-box"></div>
+    </div>
+
+    <button class="undo-btn" id="undo-btn" onclick="undoStep()">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+        <path d="M2 6a4 4 0 1 0 .8-2.4L1.2 2H0v3h3l-1-1.1A2.8 2.8 0 1 1 2 6z"/>
+      </svg>
+      <span id="undo-label">Redo last step</span>
+    </button>
+
+    <button class="reset-btn" onclick="resetAll()">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="currentColor">
+        <path d="M10.5 6A4.5 4.5 0 1 1 6 1.5V0L8.5 2.5 6 5V3.5a3 3 0 1 0 3 2.5h1.5z"/>
+      </svg>
+      Start Again
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CANVAS + CONSTANTS
+// ═══════════════════════════════════════════════════
+const canvas = document.getElementById('table');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const BALL_R   = 10.5;
+const POCKET_R = 12.5;
+const TL = 19, TR = W-19, TT = 19, TB = H-19;
+const TW = TR-TL, TH = TB-TT;
+const MID_Y = TT + TH/2;
+
+// Real pool table pocket geometry:
+// Corner pockets: centred at the corner of the rail (TL, TT etc)
+// Side pockets: centred on the long rail edge at mid-height, slightly wider
+const PR_CORNER = 13;  // corner pocket radius
+const PR_SIDE   = 13;  // side pocket radius — matched to corners for visual consistency
+const POCKETS = {
+  TL:{ x:TL, y:TT,    r:PR_CORNER, label:'Top Left'  },
+  TR:{ x:TR, y:TT,    r:PR_CORNER, label:'Top Right' },
+  ML:{ x:TL, y:MID_Y, r:PR_SIDE,   label:'Mid Left'  },
+  MR:{ x:TR, y:MID_Y, r:PR_SIDE,   label:'Mid Right' },
+  BL:{ x:TL, y:TB,    r:PR_CORNER, label:'Bot Left'  },
+  BR:{ x:TR, y:TB,    r:PR_CORNER, label:'Bot Right' },
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let state = 'place_object';
+let objectBall=null, ghostBall=null, cueBall=null;
+let selectedPocket=null, aimAngle=null, shootAngle=null;
+let power = 60;
+let animState=null, animFrame=null;
+let dragging=false, dragOffX=0, dragOffY=0;
+
+// Object ball colour state
+let ballColour = { light:'#fff5a0', mid:'#e8c040', dark:'#7a4c00', stroke:'rgba(80,40,0,0.5)', label:'#000000' };
+let mousePos={x:0,y:0}; // tracked for aiming cursor overlay
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function dist(ax,ay,bx,by){ const d=bx-ax,e=by-ay; return Math.sqrt(d*d+e*e); }
+function clamp(x,y){
+  return [
+    Math.max(TL+BALL_R+2, Math.min(TR-BALL_R-2, x)),
+    Math.max(TT+BALL_R+2, Math.min(TB-BALL_R-2, y))
+  ];
+}
+function canvasXY(e){
+  const r=canvas.getBoundingClientRect(), sx=W/r.width, sy=H/r.height;
+  const s=e.touches?e.touches[0]:e;
+  return [(s.clientX-r.left)*sx,(s.clientY-r.top)*sy];
+}
+
+// ═══════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════
+function cardShow(id){ document.getElementById(id).setAttribute('data-hidden','false'); }
+function cardHide(id){ document.getElementById(id).setAttribute('data-hidden','true'); }
+function setStep(n){
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('s'+i);
+    el.className='step'+(i===n?' active':(i<n?' done':''));
+  }
+}
+function setMsg(html){ document.getElementById('instruction').innerHTML=html; }
+function showDragPill(on){
+  document.getElementById('drag-pill').className='drag-pill'+(on?' show':'');
+}
+function setAngleDisplay(deg){
+  const el=document.getElementById('angle-val');
+  if(deg===null){ el.textContent='—'; el.className='angle-val'; return; }
+  const abs=Math.abs(deg);
+  // Show one decimal place so player sees fine-grained feedback
+  const formatted = (deg>0?'+':'')+deg.toFixed(1)+'°';
+  el.textContent=formatted;
+  el.className='angle-val'+(abs<=3?' good':abs<=8?'':' bad');
+}
+
+// Power is now charged by holding mousedown during aiming — no HTML slider needed
+// power variable (0–100) is set at shoot time from chargedPower
+let chargedPower = 0;
+let charging = false;
+let chargeStart = 0;
+const CHARGE_DURATION = 2000; // ms to go 0→100% per cycle
+
+function updatePowerTrack(){ /* no-op — power bar is drawn on canvas */ }
+
+// ═══════════════════════════════════════════════════
+// DRAW — TABLE
+// ═══════════════════════════════════════════════════
+function drawTable(){
+  // Felt base
+  const feltGrad=ctx.createRadialGradient(W/2,H/2,40,W/2,H/2,Math.max(W,H)*0.8);
+  feltGrad.addColorStop(0,'#125e30');
+  feltGrad.addColorStop(1,'#0a3d1e');
+  ctx.fillStyle=feltGrad;
+  ctx.fillRect(TL,TT,TW,TH);
+
+  // Felt texture lines (subtle)
+  ctx.save();
+  ctx.globalAlpha=0.04;
+  ctx.strokeStyle='#80ff80';
+  ctx.lineWidth=0.5;
+  for(let x=TL;x<=TR;x+=9){
+    ctx.beginPath(); ctx.moveTo(x,TT); ctx.lineTo(x,TB); ctx.stroke();
+  }
+  ctx.restore();
+
+  // Baulk line
+  ctx.save();
+  ctx.globalAlpha=0.12;
+  ctx.strokeStyle='#fffbe8'; ctx.lineWidth=0.8; ctx.setLineDash([5,8]);
+  ctx.beginPath(); ctx.moveTo(TL,TT+TH*0.25); ctx.lineTo(TR,TT+TH*0.25); ctx.stroke();
+  // Baulk D-semicircle
+  const dCx=W/2, dCy=TT+TH*0.25, dR=TW*0.12;
+  ctx.beginPath(); ctx.arc(dCx,dCy,dR,0,Math.PI); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Spot dot (top half spot)
+  ctx.beginPath(); ctx.arc(W/2,TT+TH*0.75,2.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fill();
+
+  // Cushions — 6 simple rectangles matching a real pool table rail layout
+  // Corner pockets are at the exact corners so rail segments run corner-to-corner
+  // Side pockets cut a gap in each long rail at mid-height
+  const CH  = 15;                  // cushion/rail thickness
+  const CPR = PR_CORNER;           // corner pocket radius
+  const SPG = PR_SIDE + 3;         // half-gap for side pocket opening
+  ctx.fillStyle='#1e7a40';
+
+  // Short rails: top and bottom (full width minus corner pocket circles)
+  // Drawn as one rect; pocket holes are visually covered by the pocket circles
+  ctx.fillRect(TL - CH, TT - CH, TW + CH*2, CH);  // top rail
+  ctx.fillRect(TL - CH, TB,      TW + CH*2, CH);  // bottom rail
+
+  // Long rails: left and right — two segments each with gap at side pocket
+  // Top segment: from top-rail down to side pocket opening
+  ctx.fillRect(TL - CH, TT, CH, MID_Y - TT - SPG);   // left top
+  ctx.fillRect(TL - CH, MID_Y + SPG, CH, TB - MID_Y - SPG); // left bottom
+  ctx.fillRect(TR, TT, CH, MID_Y - TT - SPG);         // right top
+  ctx.fillRect(TR, MID_Y + SPG, CH, TB - MID_Y - SPG); // right bottom
+
+  // Cushion face highlight (inner edge of rails, on the felt side)
+  ctx.save(); ctx.globalAlpha=0.25; ctx.strokeStyle='#4ecf70'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(TL,TT); ctx.lineTo(TR,TT); ctx.stroke(); // top
+  ctx.beginPath(); ctx.moveTo(TL,TB); ctx.lineTo(TR,TB); ctx.stroke(); // bottom
+  ctx.beginPath(); ctx.moveTo(TL,TT); ctx.lineTo(TL,MID_Y-SPG); ctx.stroke(); // left top
+  ctx.beginPath(); ctx.moveTo(TL,MID_Y+SPG); ctx.lineTo(TL,TB); ctx.stroke(); // left bottom
+  ctx.beginPath(); ctx.moveTo(TR,TT); ctx.lineTo(TR,MID_Y-SPG); ctx.stroke(); // right top
+  ctx.beginPath(); ctx.moveTo(TR,MID_Y+SPG); ctx.lineTo(TR,TB); ctx.stroke(); // right bottom
+  ctx.restore();
+
+  // Pockets — with blink animation during choose_pocket / placing_obj
+  const pocketsBlinking = (state==='choose_pocket'||state==='placing_obj');
+  const blinkAlpha = pocketsBlinking ? 0.5+0.5*Math.sin(Date.now()*0.006) : 0;
+  for(const key in POCKETS){
+    const p=POCKETS[key];
+    const pr=p.r||POCKET_R;
+    const isSelected=selectedPocket===key;
+    // Depth gradient
+    const pg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,pr);
+    pg.addColorStop(0,'#000408');
+    pg.addColorStop(0.65,'#00080f');
+    pg.addColorStop(1,'rgba(0,4,12,0.2)');
+    ctx.beginPath(); ctx.arc(p.x,p.y,pr,0,Math.PI*2);
+    ctx.fillStyle=pg; ctx.fill();
+    // Rim
+    if(isSelected){
+      ctx.strokeStyle='#c9a84c'; ctx.lineWidth=2.5;
+      ctx.shadowBlur=10; ctx.shadowColor='#c9a84c';
+    } else if(pocketsBlinking){
+      ctx.strokeStyle=`rgba(201,168,76,${(0.3+blinkAlpha*0.7).toFixed(2)})`;
+      ctx.lineWidth=2;
+      ctx.shadowBlur=8*blinkAlpha; ctx.shadowColor='#c9a84c';
+    } else {
+      ctx.strokeStyle='rgba(255,200,100,0.15)'; ctx.lineWidth=1;
+    }
+    ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// DRAW — GUIDES
+// ═══════════════════════════════════════════════════
+function drawGuides(){
+  if(!ghostBall||!objectBall||!selectedPocket) return;
+  const p=POCKETS[selectedPocket];
+
+  // Object ball → pocket dashed line
+  ctx.save();
+  ctx.setLineDash([5,5]); ctx.strokeStyle='rgba(201,168,76,0.5)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(ghostBall.x,ghostBall.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Ideal cue approach arrow (from ghost backward)
+  const dx=ghostBall.x-objectBall.x, dy=ghostBall.y-objectBall.y;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  if(len>0){
+    const nx=dx/len, ny=dy/len;
+    ctx.setLineDash([3,6]); ctx.strokeStyle='rgba(78,203,122,0.45)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(ghostBall.x,ghostBall.y);
+    ctx.lineTo(ghostBall.x+nx*85, ghostBall.y+ny*85); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+function drawAimLine(){
+  if(!cueBall||aimAngle===null) return;
+  // Gradient aim line
+  const ex=cueBall.x+Math.cos(aimAngle)*260, ey=cueBall.y+Math.sin(aimAngle)*260;
+  const lg=ctx.createLinearGradient(cueBall.x,cueBall.y,ex,ey);
+  lg.addColorStop(0,'rgba(74,176,255,0.7)');
+  lg.addColorStop(1,'rgba(74,176,255,0.0)');
+  ctx.save(); ctx.setLineDash([6,5]);
+  ctx.strokeStyle=lg; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(cueBall.x,cueBall.y); ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // Update angle
+  if(ghostBall){
+    const ideal=Math.atan2(ghostBall.y-cueBall.y,ghostBall.x-cueBall.x);
+    let d=aimAngle-ideal;
+    while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI;
+    // Pass decimal degrees — setAngleDisplay will format with 1dp
+    setAngleDisplay(d*180/Math.PI);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// DRAW — BALLS
+// ═══════════════════════════════════════════════════
+function drawObjectBall(x,y,draggable){
+  // Outer glow when draggable
+  if(draggable){
+    ctx.beginPath(); ctx.arc(x,y,BALL_R+6,0,Math.PI*2);
+    ctx.strokeStyle='rgba(201,168,76,0.2)'; ctx.lineWidth=2;
+    ctx.setLineDash([3,4]); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // Ball gradient — uses current ballColour
+  const g=ctx.createRadialGradient(x-3,y-3,1,x,y,BALL_R);
+  g.addColorStop(0, ballColour.light);
+  g.addColorStop(0.35, ballColour.mid);
+  g.addColorStop(1, ballColour.dark);
+  ctx.beginPath(); ctx.arc(x,y,BALL_R,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle=ballColour.stroke; ctx.lineWidth=1; ctx.stroke();
+  // Sheen
+  ctx.beginPath(); ctx.arc(x-3,y-3,3,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fill();
+  // Number — drop shadow first for contrast on all ball colours
+  ctx.font=`bold 8px 'DM Mono',monospace`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.fillText('5',x+0.5,y+1);
+  ctx.fillStyle=ballColour.label;
+  ctx.fillText('5',x,y+0.5);
+}
+
+function drawGhostBall(x,y){
+  // Ghost fill
+  ctx.beginPath(); ctx.arc(x,y,BALL_R,0,Math.PI*2);
+  ctx.fillStyle='rgba(220,215,200,0.07)'; ctx.fill();
+  // Dashed border
+  ctx.strokeStyle='rgba(200,190,170,0.55)'; ctx.lineWidth=1.2;
+  ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+  // Crosshair
+  ctx.strokeStyle='rgba(200,190,170,0.25)'; ctx.lineWidth=0.8;
+  ctx.beginPath();
+  ctx.moveTo(x-BALL_R+3,y); ctx.lineTo(x+BALL_R-3,y);
+  ctx.moveTo(x,y-BALL_R+3); ctx.lineTo(x,y+BALL_R-3);
+  ctx.stroke();
+}
+
+function drawCueBall(x,y){
+  const g=ctx.createRadialGradient(x-3,y-3,1,x,y,BALL_R);
+  g.addColorStop(0,'#ffffff');
+  g.addColorStop(0.6,'#e8e4dc');
+  g.addColorStop(1,'#a09888');
+  ctx.beginPath(); ctx.arc(x,y,BALL_R,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(120,100,80,0.3)'; ctx.lineWidth=1; ctx.stroke();
+  // Sheen
+  ctx.beginPath(); ctx.arc(x-3,y-3,3,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fill();
+}
+
+function drawAimCursor(){
+  if(state!=='aiming'||!cueBall||aimAngle===null) return;
+  const mx=mousePos.x, my=mousePos.y;
+  const d=dist(mx,my,cueBall.x,cueBall.y);
+  if(d<28) return;
+
+  // ── Mouse ring: a small crosshair circle where the mouse actually is ──
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(mx,my,5,0,Math.PI*2);
+  ctx.strokeStyle='rgba(74,176,255,0.85)';
+  ctx.lineWidth=1.2;
+  ctx.stroke();
+  // tick marks
+  ctx.strokeStyle='rgba(74,176,255,0.6)';
+  ctx.lineWidth=1;
+  for(let i=0;i<4;i++){
+    const a=i*Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(mx+Math.cos(a)*7, my+Math.sin(a)*7);
+    ctx.lineTo(mx+Math.cos(a)*10, my+Math.sin(a)*10);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── Projected contact point: ghost-ball-sized circle on the aim line ──
+  // where the cue ball's leading edge would touch the object ball
+  if(ghostBall&&objectBall){
+    // The contact position is the ghost ball center (that's where cue ball center
+    // must be to kiss the object ball). Show it as a faint blue ghost-ball outline.
+    const gx=ghostBall.x, gy=ghostBall.y;
+    ctx.save();
+    ctx.globalAlpha=0.35;
+    ctx.beginPath();
+    ctx.arc(gx,gy,BALL_R,0,Math.PI*2);
+    ctx.strokeStyle='#4ab0ff';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([2,3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // small centre dot
+    ctx.beginPath();
+    ctx.arc(gx,gy,2.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(74,176,255,0.7)';
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawCueStick(){
+  if(!cueBall||aimAngle===null||state==='animating') return;
+
+  // Pull cue back slightly while charging to show wind-up
+  const pullback = charging ? (chargedPower/100) * 14 : 0;
+  const ang=aimAngle+Math.PI, s0=BALL_R+8+pullback, sLen=100;
+  const sx=cueBall.x+Math.cos(ang)*s0, sy=cueBall.y+Math.sin(ang)*s0;
+  const ex=cueBall.x+Math.cos(ang)*(s0+sLen), ey=cueBall.y+Math.sin(ang)*(s0+sLen);
+
+  const g=ctx.createLinearGradient(sx,sy,ex,ey);
+  g.addColorStop(0,'#e0b060');
+  g.addColorStop(0.3,'#8b5e18');
+  g.addColorStop(0.8,'#4a2e08');
+  g.addColorStop(1,'#1a0c02');
+  ctx.strokeStyle=g; ctx.lineWidth=4.5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+
+  // Ferrule / tip
+  const tx=cueBall.x+Math.cos(ang)*(s0+2), ty=cueBall.y+Math.sin(ang)*(s0+2);
+  ctx.strokeStyle='#c8c4bc'; ctx.lineWidth=5.5;
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(tx,ty); ctx.stroke();
+  ctx.lineCap='butt';
+
+  // Draw power bar alongside the cue stick only while actively charging
+  if(charging) drawPowerBar();
+}
+
+function drawPowerBar(){
+  if(!cueBall||aimAngle===null) return;
+  // Position bar perpendicular to cue, offset to one side
+  const ang = aimAngle + Math.PI;
+  const perpAng = ang + Math.PI/2;
+
+  // Bar starts at cue butt end, 20px to the side
+  const offset = 16;
+  const barLen = 80;
+  const bx = cueBall.x + Math.cos(ang)*(BALL_R+20) + Math.cos(perpAng)*offset;
+  const by = cueBall.y + Math.sin(ang)*(BALL_R+20) + Math.sin(perpAng)*offset;
+  const ex = bx + Math.cos(ang)*barLen;
+  const ey = by + Math.sin(ang)*barLen;
+
+  // Background track
+  ctx.save();
+  ctx.lineCap='round';
+  ctx.lineWidth=4;
+  ctx.strokeStyle='rgba(0,0,0,0.45)';
+  ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(ex,ey); ctx.stroke();
+
+  // Filled portion
+  const pct = chargedPower/100;
+  if(pct > 0){
+    const fx = bx + Math.cos(ang)*barLen*pct;
+    const fy = by + Math.sin(ang)*barLen*pct;
+    // Colour shifts green→yellow→red as power increases
+    const r = Math.round(pct < 0.5 ? pct*2*201 : 201);
+    const g2 = Math.round(pct < 0.5 ? 200 : (1-pct)*2*168);
+    const fillColour = `rgb(${r},${g2},50)`;
+    ctx.lineWidth=4;
+    ctx.strokeStyle=fillColour;
+    ctx.shadowBlur = charging ? 6 : 0;
+    ctx.shadowColor = fillColour;
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(fx,fy); ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+
+  // Pct label at tip of bar
+  const lx = ex + Math.cos(ang)*10;
+  const ly = ey + Math.sin(ang)*10;
+  ctx.font = "bold 9px 'DM Mono',monospace";
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillText(Math.round(chargedPower)+'%', lx+0.5, ly+1);
+  ctx.fillStyle=chargedPower>70?'#ff9966':chargedPower>40?'#e8c840':'#c9e880';
+  ctx.fillText(Math.round(chargedPower)+'%', lx, ly);
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function render(){
+  ctx.clearRect(0,0,W,H);
+  drawTable();
+
+  if(state==='animating'&&animState){
+    drawGuides();
+    if(ghostBall) drawGhostBall(ghostBall.x,ghostBall.y);
+    if(animState.cueBall) drawCueBall(animState.cueBall.x,animState.cueBall.y);
+    if(animState.objBall&&!animState.objPotted) drawObjectBall(animState.objBall.x,animState.objBall.y,false);
+    return;
+  }
+
+  drawGuides();
+  drawAimLine();
+  drawAimCursor();
+  drawCueStick();
+
+  if(objectBall) drawObjectBall(objectBall.x,objectBall.y,(state==='done'||state==='dragging_obj'||state==='placing_obj'));
+  if(ghostBall)  drawGhostBall(ghostBall.x,ghostBall.y);
+  if(cueBall)    drawCueBall(cueBall.x,cueBall.y);
+  drawTableHint();
+}
+
+// Table centre instruction text
+const TABLE_HINTS = {
+  'place_object':  ['Click anywhere to place', 'the object ball'],
+  'choose_pocket': ['Click a glowing pocket', 'to aim for'],
+  'placing_obj':   ['Drag to reposition,', 'then click a pocket'],
+  'ready_cueball': ['Click to place', 'your cue ball'],
+};
+function drawTableHint(){
+  const lines = TABLE_HINTS[state];
+  if(!lines) return;
+  const cx=W/2, cy=H/2;
+  const lh=17, pad=10;
+  const bh=lines.length*lh+pad*2, bw=148;
+  ctx.save();
+  // Background pill
+  ctx.globalAlpha=0.52;
+  ctx.fillStyle='rgba(5,8,15,0.7)';
+  ctx.beginPath();
+  ctx.roundRect(cx-bw/2, cy-bh/2, bw, bh, 7);
+  ctx.fill();
+  // Text
+  ctx.globalAlpha=0.88;
+  ctx.fillStyle='rgba(220,208,180,1)';
+  ctx.font="italic 12.5px 'Crimson Pro',Georgia,serif";
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  lines.forEach((line,i)=>{
+    const y = cy - (lines.length-1)*lh/2 + i*lh;
+    ctx.fillText(line, cx, y);
+  });
+  ctx.restore();
+}
+
+// Blink loop — keeps canvas refreshing during pocket selection
+let blinkFrame=null;
+function startBlink(){
+  if(blinkFrame) return;
+  (function loop(){ blinkFrame=requestAnimationFrame(loop); render(); })();
+}
+function stopBlink(){
+  if(blinkFrame){ cancelAnimationFrame(blinkFrame); blinkFrame=null; }
+}
+
+// ═══════════════════════════════════════════════════
+// GHOST BALL CALC
+// ═══════════════════════════════════════════════════
+function calcGhost(obj,key){
+  const p=POCKETS[key];
+  const dx=obj.x-p.x, dy=obj.y-p.y, d=Math.sqrt(dx*dx+dy*dy);
+  if(!d) return null;
+  const nx=dx/d, ny=dy/d;
+  // Ghost ball is always exactly BALL_R*2 behind the object ball on the obj→pocket line.
+  // Do NOT clamp — clamping breaks the contact geometry. The ghost ball may render
+  // slightly outside felt near cushions, which is acceptable and physically correct.
+  return { x: obj.x + nx*BALL_R*2, y: obj.y + ny*BALL_R*2 };
+}
+
+// ═══════════════════════════════════════════════════
+// POCKET BUTTONS
+// ═══════════════════════════════════════════════════
+function buildPocketBtns(){
+  const c=document.getElementById('pocket-btns'); c.innerHTML='';
+  ['TL','TR','ML','MR','BL','BR'].forEach(key=>{
+    const btn=document.createElement('button');
+    btn.className='p-btn';
+    btn.textContent=POCKETS[key].label;
+    btn.onclick=()=>choosePocket(key,btn);
+    c.appendChild(btn);
+  });
+}
+
+function choosePocket(key,btn){
+  selectedPocket=key;
+  document.querySelectorAll('.p-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  ghostBall=calcGhost(objectBall,key);
+  if(!ghostBall) return;
+  state='ready_cueball'; setStep(4);
+  showDragPill(false);
+  canvas.style.cursor='crosshair';
+  setMsg('<strong>Ghost ball placed.</strong> Now click the table to position your cue ball.');
+  setUndo(true, 'Choose a different pocket');
+  render();
+}
+
+
+// ═══════════════════════════════════════════════════
+// POPUP
+// ═══════════════════════════════════════════════════
+function closePopup(){
+  const overlay = document.getElementById('popup-overlay');
+  overlay.classList.add('hiding');
+  setTimeout(()=>overlay.remove(), 260);
+}
+
+// ═══════════════════════════════════════════════════
+// BALL COLOUR PICKER
+// ═══════════════════════════════════════════════════
+const BALL_COLOURS = [
+  { id:'yellow', label:'Yellow', light:'#fff5a0', mid:'#e8c040', dark:'#7a4c00', stroke:'rgba(80,40,0,0.5)',   label_c:'#000000' },
+  { id:'red',    label:'Red',    light:'#ffaaaa', mid:'#e03030', dark:'#7a0000', stroke:'rgba(80,0,0,0.5)',    label_c:'#000000' },
+  { id:'blue',   label:'Blue',   light:'#aaccff', mid:'#2060e0', dark:'#001880', stroke:'rgba(0,10,80,0.5)',   label_c:'#000000' },
+  { id:'purple', label:'Purple', light:'#ddaaff', mid:'#8030d0', dark:'#380070', stroke:'rgba(30,0,60,0.5)',   label_c:'#000000' },
+  { id:'orange', label:'Orange', light:'#ffe0a0', mid:'#e07020', dark:'#6a2a00', stroke:'rgba(60,20,0,0.5)',   label_c:'#000000' },
+  { id:'green',  label:'Green',  light:'#aaffcc', mid:'#20a050', dark:'#004020', stroke:'rgba(0,40,10,0.5)',   label_c:'#000000' },
+  { id:'maroon', label:'Maroon', light:'#ffaacc', mid:'#b02060', dark:'#500020', stroke:'rgba(50,0,20,0.5)',   label_c:'#000000' },
+  { id:'black',  label:'Black',  light:'#aaaaaa', mid:'#404040', dark:'#101010', stroke:'rgba(0,0,0,0.7)',     label_c:'#000000' },
+  { id:'pink',   label:'Pink',   light:'#ffddee', mid:'#e870a8', dark:'#7a2050', stroke:'rgba(80,10,40,0.5)',  label_c:'#000000' },
+  { id:'teal',   label:'Teal',   light:'#aaffee', mid:'#20b0a0', dark:'#005048', stroke:'rgba(0,40,40,0.5)',   label_c:'#000000' },
+];
+
+function buildColourPicker(){
+  const grid = document.getElementById('colour-grid');
+  BALL_COLOURS.forEach((c,i) => {
+    const sw = document.createElement('div');
+    sw.className = 'colour-swatch' + (i===0?' active':'');
+    sw.title = c.label;
+    sw.style.background = `radial-gradient(circle at 38% 35%, ${c.light}, ${c.mid} 50%, ${c.dark})`;
+    sw.dataset.id = c.id;
+    sw.onclick = () => selectColour(c, sw);
+    grid.appendChild(sw);
+  });
+}
+
+function selectColour(c, el){
+  document.querySelectorAll('.colour-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  ballColour = { light:c.light, mid:c.mid, dark:c.dark, stroke:c.stroke, label:c.label_c };
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════
+function resetAll(){
+  state='place_object';
+  objectBall=null; ghostBall=null; cueBall=null;
+  selectedPocket=null; aimAngle=null; shootAngle=null; animState=null;
+  if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
+  dragging=false; charging=false; chargedPower=0;
+  setStep(1);
+  setMsg('<strong>Click the table</strong> to place the object ball anywhere on the felt.');
+  cardHide('pocket-card'); cardHide('aim-card'); cardHide('result-card');
+  setAngleDisplay(null);
+  stopBlink();
+  canvas.style.cursor='crosshair';
+  showDragPill(false);
+  setUndo(false);
+  render();
+}
+
+function softReset(){
+  if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
+  ghostBall=null; cueBall=null; animState=null;
+  selectedPocket=null; aimAngle=null; shootAngle=null;
+  dragging=false; charging=false; chargedPower=0;
+  state='placing_obj'; setStep(2); startBlink();
+  setMsg('<strong>Drag the ball</strong> to reposition, then choose a pocket to lock in.');
+  cardHide('pocket-card'); cardHide('aim-card'); cardHide('result-card');
+  setAngleDisplay(null);
+  canvas.style.cursor='grab';
+  showDragPill(true);
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+// UNDO
+// ═══════════════════════════════════════════════════
+function setUndo(visible, label){
+  const btn = document.getElementById('undo-btn');
+  const lbl = document.getElementById('undo-label');
+  if(visible){
+    lbl.textContent = label || 'Undo last step';
+    btn.classList.add('visible');
+  } else {
+    btn.classList.remove('visible');
+  }
+}
+
+// Each step's undo rolls back to exactly the previous state
+function undoStep(){
+  if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
+  stopBlink();
+
+  // State machine: go back one step
+  if(state==='choose_pocket'){
+    // Undo: placed object ball → go back to place_object
+    objectBall=null; ghostBall=null;
+    state='place_object'; setStep(1);
+    setMsg('<strong>Click the table</strong> to place the object ball anywhere on the felt.');
+    cardHide('pocket-card');
+    canvas.style.cursor='crosshair';
+    showDragPill(false);
+    setUndo(false);
+
+  } else if(state==='placing_obj'){
+    // Undo: repositioning → go back to place_object (start fresh)
+    objectBall=null; ghostBall=null; selectedPocket=null;
+    state='place_object'; setStep(1);
+    setMsg('<strong>Click the table</strong> to place the object ball anywhere on the felt.');
+    cardHide('pocket-card');
+    canvas.style.cursor='crosshair';
+    showDragPill(false);
+    setUndo(false);
+
+  } else if(state==='ready_cueball'){
+    // Undo: chose pocket → go back to choosing pocket
+    ghostBall=null; selectedPocket=null;
+    document.querySelectorAll('.p-btn').forEach(b=>b.classList.remove('selected'));
+    state='choose_pocket'; setStep(2);
+    startBlink();
+    setMsg('Object ball placed. <strong>Click a glowing pocket</strong> on the table.');
+    canvas.style.cursor='crosshair';
+    showDragPill(false);
+    setUndo(true, 'Move the object ball instead');
+
+  } else if(state==='aiming'){
+    // Undo: placed cue ball → go back to ready_cueball
+    charging=false; chargedPower=0;
+    cueBall=null; aimAngle=null;
+    state='ready_cueball'; setStep(4);
+    cardHide('aim-card');;
+    setAngleDisplay(null);
+    setMsg('<strong>Ghost ball set.</strong> Click the table to place your cue ball.');
+    canvas.style.cursor='crosshair';
+    showDragPill(false);
+    setUndo(true, 'Choose a different pocket');
+
+  } else if(state==='done'){
+    // Undo: shot taken → let them re-aim (soft reset)
+    softReset();
+    setUndo(true, 'Move the object ball instead');
+    return;
+  }
+
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════════════
+canvas.addEventListener('mousedown',onDown);
+canvas.addEventListener('mousemove',onMove);
+canvas.addEventListener('mouseup',  onUp);
+
+function onDown(e){
+  const [mx,my]=canvasXY(e);
+
+  if((state==='done'||state==='placing_obj')&&objectBall&&dist(mx,my,objectBall.x,objectBall.y)<BALL_R+12){
+    dragging=true; dragOffX=objectBall.x-mx; dragOffY=objectBall.y-my;
+    state='dragging_obj'; canvas.style.cursor='grabbing'; return;
+  }
+
+  if(state==='place_object'){
+    const [cx,cy]=clamp(mx,my);
+    objectBall={x:cx,y:cy}; state='choose_pocket'; setStep(2);
+    startBlink();
+    setMsg('Object ball placed. <strong>Click a glowing pocket</strong> on the table.');
+    setUndo(true, 'Place the object ball again');
+    render(); return;
+  }
+
+  // Click a pocket directly on the canvas
+  if(state==='choose_pocket'||state==='placing_obj'){
+    for(const key in POCKETS){
+      const p=POCKETS[key];
+      if(dist(mx,my,p.x,p.y)<(p.r||POCKET_R)+8){
+        selectedPocket=key;
+        ghostBall=calcGhost(objectBall,key);
+        if(!ghostBall) return;
+        stopBlink();
+        state='ready_cueball'; setStep(4);
+        showDragPill(false);
+        canvas.style.cursor='crosshair';
+        setMsg('<strong>Ghost ball set.</strong> Click the table to place your cue ball.');
+        setUndo(true, 'Choose a different pocket');
+        render(); return;
+      }
+    }
+    return;
+  }
+
+  if(state==='ready_cueball'){
+    if(objectBall&&dist(mx,my,objectBall.x,objectBall.y)<BALL_R*2.5) return;
+    if(ghostBall &&dist(mx,my,ghostBall.x, ghostBall.y )<BALL_R*2.5) return;
+    const [cx,cy]=clamp(mx,my);
+    cueBall={x:cx,y:cy}; state='aiming'; setStep(5);
+    cardShow('aim-card');;
+    setMsg('Cue ball placed. <strong>Move mouse to aim</strong>, then <strong>hold click to charge</strong> power — release to shoot.');
+    aimAngle=ghostBall?Math.atan2(ghostBall.y-cueBall.y,ghostBall.x-cueBall.x):0;
+    canvas.style.cursor='crosshair';
+    setUndo(true, 'Place the cue ball again');
+    render(); return;
+  }
+
+  if(state==='aiming'){
+    // Start charging — shoot happens on mouseup
+    charging=true; chargedPower=0; chargeStart=Date.now();
+    // Kick off a render loop while charging so the bar animates
+    (function chargeLoop(){
+      if(!charging) return;
+      // Cycle: 0→100→0→100… using a triangle wave
+      const elapsed = (Date.now()-chargeStart) % (CHARGE_DURATION*2);
+      chargedPower = elapsed < CHARGE_DURATION
+        ? (elapsed/CHARGE_DURATION)*100
+        : (2 - elapsed/CHARGE_DURATION)*100;
+      render();
+      requestAnimationFrame(chargeLoop);
+    })();
+    return;
+  }
+}
+
+function onMove(e){
+  const [mx,my]=canvasXY(e);
+  mousePos={x:mx,y:my};
+
+  if((state==='dragging_obj'||state==='placing_obj')&&dragging&&objectBall){
+    const [cx,cy]=clamp(mx+dragOffX,my+dragOffY);
+    objectBall={x:cx,y:cy}; render(); return;
+  }
+
+  if(state==='aiming'&&cueBall){
+    const d=dist(mx,my,cueBall.x,cueBall.y);
+    // Dead zone: mouse too close = geometry unstable, ignore
+    if(d<32){ render(); return; }
+
+    const rawAngle=Math.atan2(my-cueBall.y,mx-cueBall.x);
+
+    if(aimAngle===null){
+      aimAngle=rawAngle;
+    } else {
+      // Sensitivity damping: when mouse is close (32–80px), slow down angle changes
+      // so small mouse movements don't sweep large angles.
+      // Beyond 80px: full 1:1 response — what you see is what fires.
+      const sensitivity = Math.min(1.0, (d - 32) / 48);  // 0.0 at 32px → 1.0 at 80px+
+
+      let delta = rawAngle - aimAngle;
+      while(delta >  Math.PI) delta -= 2*Math.PI;
+      while(delta < -Math.PI) delta += 2*Math.PI;
+
+      // At full sensitivity (far mouse): apply delta directly — no lag, no lerp.
+      // At low sensitivity (close mouse): dampen the delta to prevent jumping.
+      aimAngle += delta * (0.15 + sensitivity * 0.85);
+    }
+    render(); return;
+  }
+
+  // Hover cursor hint
+  if((state==='done'||state==='placing_obj')&&objectBall){
+    canvas.style.cursor=dist(mx,my,objectBall.x,objectBall.y)<BALL_R+12?'grab':'default';
+  }
+}
+
+function onUp(){
+  // Release shot when charging in aiming state
+  if(state==='aiming' && charging){
+    charging=false;
+    power = Math.max(5, Math.round(chargedPower));
+    chargedPower=0;  // clear so bar doesn't show on next shot setup
+    shootAngle=aimAngle;
+    shoot();
+    return;
+  }
+
+  if(state==='dragging_obj'||state==='placing_obj'){
+    // Drop ball but stay draggable — user commits by choosing a pocket
+    dragging=false;
+    state='placing_obj';
+    canvas.style.cursor='grab';
+    setMsg('<strong>Drag again</strong> to reposition, or choose a pocket below to lock in.');
+    showDragPill(true);
+    render();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SHOOT + PHYSICS
+// ═══════════════════════════════════════════════════
+function shoot(){
+  if(!cueBall||!ghostBall||!objectBall||!selectedPocket) return;
+  state='animating'; canvas.style.cursor='default';
+
+  // Ideal direction: cue ball centre → ghost ball centre
+  const ideal=Math.atan2(ghostBall.y-cueBall.y, ghostBall.x-cueBall.x);
+  let diff=shootAngle-ideal;
+  while(diff> Math.PI) diff-=2*Math.PI;
+  while(diff<-Math.PI) diff+=2*Math.PI;
+
+  const spd=(power/100)*13;
+  const cvx=Math.cos(shootAngle)*spd, cvy=Math.sin(shootAngle)*spd;
+  const pk=POCKETS[selectedPocket];
+
+  animState={
+    cueBall:{x:cueBall.x, y:cueBall.y, vx:cvx, vy:cvy},
+    objBall:{x:objectBall.x, y:objectBall.y, vx:0, vy:0},
+    objHit:false, objPotted:false, phase:'cuemoving',
+    angleDiffDeg:diff*180/Math.PI,  // keep decimal precision
+    pocketX:pk.x, pocketY:pk.y, pocketR:pk.r||POCKET_R,
+    frameCount:0, done:false,
+  };
+  animFrame=requestAnimationFrame(animStep);
+}
+
+function animStep(){
+  const a=animState; a.frameCount++;
+
+  if(!a.objHit&&a.phase==='cuemoving'){
+    // Sub-step loop: move cue ball in small increments, checking collision each step.
+    // IMPORTANT: apply friction AFTER the position move each sub-step, not before —
+    // otherwise the position update uses an already-reduced velocity and the ball
+    // consistently undershoots the contact point.
+    const SUBSTEPS = 24;
+    const frictionPerSub = Math.pow(0.986, 1/SUBSTEPS);
+    let collided = false;
+
+    for(let s=0; s<SUBSTEPS && !collided; s++){
+      // Move first, then decay velocity
+      a.cueBall.x += a.cueBall.vx / SUBSTEPS;
+      a.cueBall.y += a.cueBall.vy / SUBSTEPS;
+      // Friction decays speed but NOT direction — direction stays true to shootAngle
+      a.cueBall.vx *= frictionPerSub;
+      a.cueBall.vy *= frictionPerSub;
+
+      const d = dist(a.cueBall.x, a.cueBall.y, a.objBall.x, a.objBall.y);
+      if(d < BALL_R*2){
+        collided = true;
+        a.objHit = true;
+
+        // Contact normal: FROM cue ball TO object ball at moment of impact
+        const safeD = Math.max(d, 1);
+        const cnx = (a.objBall.x - a.cueBall.x) / safeD;
+        const cny = (a.objBall.y - a.cueBall.y) / safeD;
+
+        // Separate balls to exact touching distance BEFORE velocity transfer
+        const overlap = BALL_R*2 - d;
+        a.cueBall.x -= cnx * (overlap * 0.5);
+        a.cueBall.y -= cny * (overlap * 0.5);
+        a.objBall.x += cnx * (overlap * 0.5);
+        a.objBall.y += cny * (overlap * 0.5);
+
+        // Scalar projection of cue velocity onto contact normal
+        const proj = a.cueBall.vx*cnx + a.cueBall.vy*cny;
+
+        if(proj > 0){
+          // Object ball gets the full normal component (equal-mass elastic collision)
+          a.objBall.vx = cnx * proj * 0.93;
+          a.objBall.vy = cny * proj * 0.93;
+          // Cue ball keeps only the tangential component
+          a.cueBall.vx = (a.cueBall.vx - cnx*proj) * 0.55;
+          a.cueBall.vy = (a.cueBall.vy - cny*proj) * 0.55;
+        } else {
+          // Glancing miss — shouldn't happen on a valid aimed shot
+          a.objBall.vx = cnx * 0.3;
+          a.objBall.vy = cny * 0.3;
+        }
+
+        a.phase = 'objmoving';
+      }
+    }
+    // Only bounce cue if it didn't just collide (avoid double-processing)
+    if(!a.objHit) bounce(a.cueBall);
+  }
+
+  if(a.objHit&&!a.objPotted){
+    a.objBall.x+=a.objBall.vx; a.objBall.y+=a.objBall.vy;
+    a.objBall.vx*=0.983; a.objBall.vy*=0.983;
+    a.cueBall.x+=a.cueBall.vx; a.cueBall.y+=a.cueBall.vy;
+    a.cueBall.vx*=0.97;  a.cueBall.vy*=0.97;
+    bounce(a.cueBall);
+    if(dist(a.objBall.x,a.objBall.y,a.pocketX,a.pocketY)<(a.pocketR||PR_CORNER)+BALL_R) a.objPotted=true;
+    else bounce(a.objBall);
+  }
+
+  if(!a.objPotted) objectBall={x:a.objBall.x,y:a.objBall.y};
+
+  const cs=Math.sqrt(a.cueBall.vx**2+a.cueBall.vy**2);
+  const os=a.objPotted?0:Math.sqrt(a.objBall.vx**2+a.objBall.vy**2);
+  // Don't end until we've actually hit the object ball (or timed out)
+  if(((a.objHit&&cs<0.28&&os<0.28))||a.frameCount>600) a.done=true;
+
+  render();
+  if(a.done){ endShot(a); return; }
+  animFrame=requestAnimationFrame(animStep);
+}
+
+function bounce(b){
+  // Check if ball is near any pocket — if so, don't bounce it off the wall,
+  // let it roll into the pocket instead.
+  for(const key in POCKETS){
+    const p=POCKETS[key];
+    if(dist(b.x,b.y,p.x,p.y)<(p.r||PR_CORNER)+BALL_R) return; // near pocket
+  }
+  if(b.x-BALL_R<TL){b.x=TL+BALL_R;b.vx= Math.abs(b.vx)*0.75;}
+  if(b.x+BALL_R>TR){b.x=TR-BALL_R;b.vx=-Math.abs(b.vx)*0.75;}
+  if(b.y-BALL_R<TT){b.y=TT+BALL_R;b.vy= Math.abs(b.vy)*0.75;}
+  if(b.y+BALL_R>TB){b.y=TB-BALL_R;b.vy=-Math.abs(b.vy)*0.75;}
+}
+
+// ═══════════════════════════════════════════════════
+// END SHOT
+// ═══════════════════════════════════════════════════
+function endShot(a){
+  // Null both balls BEFORE state change and render so placing_obj render
+  // never draws the stale animation-position cue ball or ghost ball.
+  cueBall   = null;
+  ghostBall = null;
+
+  state='done'; canvas.style.cursor='default';
+  cardShow('result-card');
+  const deg=Math.abs(a.angleDiffDeg);  // float
+  const degStr=deg.toFixed(1);
+  let icon,grade,detail;
+
+  if(a.objPotted){
+    objectBall=null;
+    if(deg<=3){       icon='🎱'; grade='Perfect'; detail=`${degStr}° off — textbook ghost ball`; }
+    else if(deg<=8){  icon='✦';  grade='Great shot'; detail=`${degStr}° off ideal angle`; }
+    else if(deg<=15){ icon='✓';  grade='Good pot'; detail=`${degStr}° off — keep practising`; }
+    else{             icon='☘'; grade='Lucky pot'; detail=`${degStr}° — fortunate angle`; }
+    setMsg('Ball potted! Click <strong>Start Again</strong> to play again.');
+    setUndo(false);
+  } else if(!a.objHit){
+    icon='✕'; grade='Missed'; detail='Aim directly at the ghost ball';
+    selectedPocket=null;
+    setMsg('<strong>Drag the ball</strong> to a new position, or Start Again.');
+    showDragPill(true); canvas.style.cursor='grab';
+    setUndo(true, 'Take the shot again');
+  } else {
+    icon='○';
+    if(deg===0){
+      grade='Missed pocket'; detail='Perfect angle — try adjusting ball position';
+    } else if(deg<5){
+      grade='So close'; detail=`${degStr}° off — tiny adjustment needed`;
+    } else if(deg<20){
+      grade='Missed pocket'; detail=`${degStr}° off — check your aim line`;
+    } else {
+      grade='Missed pocket'; detail=`${degStr}° off — significant angle error`;
+    }
+    selectedPocket=null;
+    setMsg('<strong>Drag the ball</strong> to a new position, or Start Again.');
+    showDragPill(true); canvas.style.cursor='grab';
+    setUndo(true, 'Take the shot again');
+  }
+
+  document.getElementById('result-box').innerHTML=`
+    <div class="result-icon">${icon}</div>
+    <div class="result-grade">${grade}</div>
+    <div class="result-detail">${detail}</div>
+  `;
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+// roundRect polyfill for older browsers
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    this.beginPath();
+    this.moveTo(x+r,y);
+    this.lineTo(x+w-r,y); this.arcTo(x+w,y,x+w,y+r,r);
+    this.lineTo(x+w,y+h-r); this.arcTo(x+w,y+h,x+w-r,y+h,r);
+    this.lineTo(x+r,y+h); this.arcTo(x,y+h,x,y+h-r,r);
+    this.lineTo(x,y+r); this.arcTo(x,y,x+r,y,r);
+    this.closePath(); return this;
+  };
+}
+buildColourPicker();
+resetAll();
+</script>
+</body>
+</html>
