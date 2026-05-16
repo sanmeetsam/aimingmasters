@@ -1157,6 +1157,8 @@ let dragging=false, dragOffX=0, dragOffY=0;
 
 let ballColour = { light:'#fff5a0', mid:'#e8c040', dark:'#7a4c00', stroke:'rgba(80,40,0,0.5)', label:'#000000' };
 let mousePos={x:0,y:0};
+// Mobile-only: show a "Start Again" overlay on the canvas after a successful pot
+let showPotOverlay = false;
 
 // ═══════════════════════════════════════════════════
 // UTILS
@@ -1601,6 +1603,7 @@ function render(){
   if(ghostBall)  drawGhostBall(ghostBall.x,ghostBall.y);
   if(cueBall)    drawCueBall(cueBall.x,cueBall.y);
   drawTableHint();
+  if(IS_MOBILE && showPotOverlay) drawPotOverlay();
 }
 
 const TABLE_HINTS = {
@@ -1629,6 +1632,52 @@ function drawTableHint(){
     const y = cy - (lines.length-1)*lh/2 + i*lh;
     ctx.fillText(line, cx, y);
   });
+  ctx.restore();
+}
+
+// ── Mobile "Start Again" overlay drawn on canvas after a successful pot ──
+function drawPotOverlay(){
+  const cx = W/2, cy = H/2;
+
+  // Semi-transparent dark backdrop over whole table
+  ctx.save();
+  ctx.fillStyle = 'rgba(5,8,15,0.72)';
+  ctx.fillRect(TL, TT, TW, TH);
+
+  // Celebration emoji
+  ctx.font = '32px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🎱', cx, cy - 52);
+
+  // "Ball Potted!" heading
+  ctx.font = "700 18px 'Playfair Display',serif";
+  ctx.fillStyle = '#e8cc7a';
+  ctx.fillText('Ball Potted!', cx, cy - 16);
+
+  // Button pill — "Tap to Start Again"
+  const bw = 154, bh = 38, br = 19;
+  const bx = cx - bw/2, by = cy + 8;
+
+  // Gold pill background
+  ctx.fillStyle = '#c9a84c';
+  ctx.beginPath();
+  ctx.roundRect(bx, by, bw, bh, br);
+  ctx.fill();
+
+  // Subtle inner highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  ctx.roundRect(bx+2, by+2, bw-4, bh/2-2, br-2);
+  ctx.fill();
+
+  // Button label
+  ctx.font = "700 11px 'DM Mono',monospace";
+  ctx.fillStyle = '#0c0b10';
+  ctx.letterSpacing = '0.1em';
+  ctx.fillText('TAP TO START AGAIN', cx, by + bh/2 + 1);
+  ctx.letterSpacing = '0';
+
   ctx.restore();
 }
 
@@ -1766,8 +1815,9 @@ function resetAll(){
   if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
   dragging=false; charging=false; chargedPower=0;
   stopHintPulse(); hintPulse=0;
+  showPotOverlay = false;
   setStep(1);
-  const msg = IS_MOBILE
+  var msg = IS_MOBILE
     ? '<strong>Tap the table</strong> to place the object ball anywhere on the felt.'
     : '<strong>Click the table</strong> to place the object ball anywhere on the felt.';
   setMsg(msg);
@@ -1863,6 +1913,12 @@ canvas.addEventListener('touchend',   e=>{ e.preventDefault(); onUp(e);   }, { p
 
 function onDown(e){
   const [mx,my]=canvasXY(e);
+
+  // MOBILE: tap anywhere on the pot overlay triggers Start Again
+  if(IS_MOBILE && showPotOverlay){
+    resetAll();
+    return;
+  }
 
   if((state==='done'||state==='placing_obj')&&objectBall&&dist(mx,my,objectBall.x,objectBall.y)<BALL_R+12){
     dragging=true; dragOffX=objectBall.x-mx; dragOffY=objectBall.y-my;
@@ -2090,6 +2146,7 @@ function endShot(a){
     else{             icon='☘'; grade='Lucky pot'; detail=`${degStr}° — fortunate angle`; }
     setMsg('Ball potted! Tap <strong>Start Again</strong> to play again.');
     setUndo(false);
+    if(IS_MOBILE) showPotOverlay = true;
   } else if(!a.objHit){
     icon='✕'; grade='Missed'; detail='Aim directly at the ghost ball';
     selectedPocket=null;
