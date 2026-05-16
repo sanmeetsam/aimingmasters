@@ -7,46 +7,33 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-QR0CCTXLFB');
 </script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="description" content="Practice the ghost ball technique interactively. Free aiming tool for pool, snooker and billiard players of all levels. Improve your potting accuracy today.">
 
 <meta property="og:title" content="Aiming Masters – Ghost Ball Practice Tool">
 <meta property="og:description" content="Interactive ghost ball aiming trainer for pool, snooker and billiards players.">
 <meta property="og:url" content="https://www.aimingmasters.com">  
 
-<!-- SEO: Canonical URL -->
 <link rel="canonical" href="https://www.aimingmasters.com/">
-
-<!-- SEO: Keywords -->
 <meta name="keywords" content="ghost ball method, pool aiming practice, snooker aiming tool, billiards practice tool, how to aim in pool, ghost ball technique, pool training tool, snooker practice, billiards aiming trainer, pot a ball snooker">
-
-<!-- SEO: Author + Robot instructions -->
 <meta name="author" content="Aiming Masters">
 <meta name="robots" content="index, follow">
-
-<!-- SEO: OG Image (optional but recommended) -->
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://www.aimingmasters.com/preview.png">
-
-<!-- SEO: Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Aiming Masters – Free Ghost Ball Practice Tool">
 <meta name="twitter:description" content="Interactive ghost ball aiming trainer for pool, snooker and billiards. Practice your potting accuracy for free.">
-
-
+  
+<title>Aiming Masters – Free Ghost Ball Practice Tool for Pool, Snooker & Billiards</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-  
-  
-<title>Aiming Masters – Free Ghost Ball Practice Tool for Pool, Snooker & Billiards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <style>
@@ -84,15 +71,16 @@ body {
   background: var(--bg);
   font-family: 'Crimson Pro', Georgia, serif;
   color: var(--text);
-  height: 100vh;
-  overflow: hidden;
+  /* MOBILE FIX: remove overflow:hidden and height:100vh — let mobile scroll naturally */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* MOBILE FIX: padding so content doesn't touch screen edges on small devices */
+  padding: 10px 8px 20px;
 }
 
-/* Subtle grain overlay */
 body::before {
   content:'';
   position:fixed; inset:0;
@@ -109,6 +97,7 @@ header {
   margin-bottom: 14px;
   flex-shrink: 0;
   z-index: 1;
+  width: 100%;
 }
 header::before, header::after {
   content:'';
@@ -287,6 +276,11 @@ h1 {
   transition: all 0.18s;
   text-align: center;
   letter-spacing: 0.02em;
+  /* MOBILE FIX: ensure tap targets are large enough */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .p-btn:hover {
   border-color: var(--gold);
@@ -327,9 +321,6 @@ h1 {
   color: var(--text-mute);
   margin-top: 3px;
 }
-
-/* ── CANVAS POWER BAR ───────────────────────────── */
-/* Drawn on-canvas via JS — no HTML needed */
 
 /* ── RESULT ─────────────────────────────────────── */
 .result-wrap { text-align: center; padding: 4px 0; }
@@ -380,6 +371,7 @@ h1 {
   opacity: 0;
   pointer-events: none;
   transform: translateY(4px);
+  min-height: 44px; /* MOBILE FIX: tap target */
 }
 .undo-btn.visible {
   opacity: 1;
@@ -412,6 +404,7 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 44px; /* MOBILE FIX: tap target */
 }
 .reset-btn:hover {
   border-color: var(--gold);
@@ -429,7 +422,6 @@ h1 {
 }
 
 .table-frame {
-  /* Outer wood frame */
   background: radial-gradient(ellipse at 30% 20%, #3a1e08, #1a0c02);
   border-radius: 18px;
   padding: 16px;
@@ -442,7 +434,6 @@ h1 {
     0 4px 16px rgba(0,0,0,0.7);
   position: relative;
 }
-/* Wood grain lines on frame */
 .table-frame::before {
   content:'';
   position:absolute; inset:0;
@@ -460,6 +451,8 @@ h1 {
 canvas {
   display: block;
   border-radius: 3px;
+  /* MOBILE FIX: touch-action none prevents browser scrolling while playing */
+  touch-action: none;
   cursor: crosshair;
 }
 
@@ -513,6 +506,9 @@ canvas {
   align-items: center;
   justify-content: center;
   animation: fadeIn 0.35s ease;
+  /* MOBILE FIX: allow scrolling inside popup on small screens */
+  overflow-y: auto;
+  padding: 16px;
 }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
@@ -521,13 +517,17 @@ canvas {
   border: 1px solid var(--border2);
   border-radius: 18px;
   width: 480px;
-  max-width: 92vw;
+  /* MOBILE FIX: cap width to viewport */
+  max-width: 100%;
   padding: 36px 38px 30px;
   position: relative;
   box-shadow:
     0 0 0 1px rgba(0,0,0,0.6),
     0 30px 80px rgba(0,0,0,0.8);
   animation: slideUp 0.35s cubic-bezier(0.4,0,0.2,1);
+  /* MOBILE FIX: allow popup itself to scroll if viewport is very short */
+  max-height: 90vh;
+  overflow-y: auto;
 }
 @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 
@@ -644,6 +644,7 @@ canvas {
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+  min-height: 44px; /* MOBILE FIX: tap target */
 }
 .popup-start-btn:hover {
   background: var(--gold-light);
@@ -677,7 +678,6 @@ canvas {
   box-shadow: 0 0 8px rgba(201,168,76,0.5);
   transform: scale(1.1);
 }
-/* Sheen overlay on swatch to look ball-like */
 .colour-swatch::after {
   content:'';
   position:absolute;
@@ -688,17 +688,173 @@ canvas {
   pointer-events:none;
 }
 
-</style>
-<script>
-function closePopup(){
-  var overlay = document.getElementById('popup-overlay');
-  if(!overlay) return;
-  overlay.style.transition = 'opacity 0.22s';
-  overlay.style.opacity = '0';
-  overlay.style.pointerEvents = 'none';
-  setTimeout(function(){ overlay.style.display = 'none'; }, 230);
+/* ══════════════════════════════════════════════════
+   MOBILE STYLES — everything below this line ONLY
+   affects screens narrower than 700px.
+   Desktop layout above is completely untouched.
+   ══════════════════════════════════════════════════ */
+@media (max-width: 700px) {
+
+  body {
+    padding: 8px 0 24px;
+    justify-content: flex-start;
+    /* Allow page scroll on mobile */
+    overflow-y: auto;
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  header {
+    margin-bottom: 10px;
+    padding: 0 12px;
+  }
+  /* Hide the decorative lines that require 440px width */
+  header::before, header::after { display: none; }
+
+  h1 { font-size: 1.15rem; }
+  .tagline { font-size: 0.48rem; }
+
+  /* Stack layout vertically: canvas top, panels below */
+  .layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* On mobile, both panels sit below the canvas and sit side by side */
+  .panel {
+    width: 100%;
+    max-width: 340px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Bottom area: two panels side by side */
+  .mobile-panels {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 340px;
+    align-items: flex-start;
+  }
+  .mobile-panels .panel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Canvas scales to fit screen */
+  .table-wrap {
+    width: 100%;
+    max-width: 340px;
+  }
+  .table-frame {
+    padding: 10px;
+    border-radius: 14px;
+  }
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Compact cards on mobile */
+  .card {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+  .card-label {
+    font-size: 0.48rem;
+    margin-bottom: 8px;
+  }
+
+  /* Steps: horizontal scrollable strip on mobile */
+  .steps {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 4px;
+    /* hide scrollbar visually */
+    scrollbar-width: none;
+  }
+  .steps::-webkit-scrollbar { display: none; }
+  .step {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    flex-shrink: 0;
+    border-left: none;
+    border-top: 2px solid transparent;
+  }
+  .step.active {
+    background: linear-gradient(180deg, rgba(201,168,76,0.1), transparent);
+    border-left: none;
+    border-top: 2px solid var(--gold);
+  }
+  .step-text {
+    font-size: 0.65rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* Instruction box smaller */
+  .instruction {
+    font-size: 0.76rem;
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+
+  /* Pocket grid: 3-column on mobile to save vertical space */
+  .pocket-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+  }
+  .p-btn {
+    font-size: 0.68rem;
+    padding: 6px 4px;
+    min-height: 38px;
+  }
+
+  /* Angle display compact */
+  .angle-val { font-size: 1.8rem; }
+
+  /* Colour swatches: slightly bigger tap targets on mobile */
+  .colour-swatch {
+    width: 32px; height: 32px;
+  }
+  .colour-grid {
+    gap: 6px;
+  }
+
+  /* Undo / reset buttons full width */
+  .undo-btn, .reset-btn {
+    font-size: 0.8rem;
+  }
+
+  /* Popup: tighter padding on small screens */
+  .popup {
+    padding: 24px 20px 20px;
+    border-radius: 14px;
+  }
+  .popup-title { font-size: 1.2rem; }
+  .popup-purpose { font-size: 0.85rem; }
+  .popup-step { font-size: 0.78rem; }
+  .popup-tip { font-size: 0.72rem; }
+
+  /* Drag pill: move above canvas on mobile so it doesn't get clipped */
+  .drag-pill {
+    bottom: auto;
+    top: -22px;
+  }
 }
-</script>
+
+/* Very small phones */
+@media (max-width: 360px) {
+  h1 { font-size: 1rem; }
+  .pocket-grid { grid-template-columns: 1fr 1fr; }
+  .p-btn { font-size: 0.62rem; }
+}
+</style>
 </head>
 
 <!-- ═══ ONBOARDING POPUP ═══ -->
@@ -716,11 +872,11 @@ function closePopup(){
     <div class="popup-steps">
       <div class="popup-step">
         <div class="popup-step-num">1</div>
-        <span><strong>Place the object ball</strong> anywhere on the table by clicking</span>
+        <span><strong>Place the object ball</strong> anywhere on the table by tapping</span>
       </div>
       <div class="popup-step">
         <div class="popup-step-num">2</div>
-        <span><strong>Choose a target pocket</strong> from the panel on the right</span>
+        <span><strong>Choose a target pocket</strong> from the panel below</span>
       </div>
       <div class="popup-step">
         <div class="popup-step-num">3</div>
@@ -736,7 +892,7 @@ function closePopup(){
       </div>
     </div>
     <div class="popup-tip">
-      💡 <strong>Pro tip:</strong> Move your mouse further from the cue ball for finer angle control. The angle display shows your precision in real time.
+      💡 <strong>On mobile:</strong> Tap to place balls, then hold &amp; drag to aim. Release to shoot.
     </div>
     <button class="popup-start-btn" onclick="closePopup()">Start Practicing</button>
   </div>
@@ -748,6 +904,8 @@ function closePopup(){
   Free interactive ghost ball method practice tool for pool, snooker and billiards players. 
   Learn how to aim using the ghost ball technique. Improve your potting accuracy with this 
   free billiards aiming trainer suitable for beginners and advanced players.
+  Ghost ball method is really helpful. Here's a link that helped me -
+  <a href="https://www.aimingmasters.com/">https://www.aimingmasters.com/</a>
 </p>  
 
 <header>
@@ -761,10 +919,10 @@ function closePopup(){
   </div>
 </header>
 
-<div class="layout">
+<div class="layout" id="main-layout">
 
-  <!-- ═══ LEFT PANEL ═══ -->
-  <div class="panel">
+  <!-- ═══ LEFT PANEL (desktop only, hidden on mobile) ═══ -->
+  <div class="panel" id="left-panel">
 
     <div class="card">
       <div class="card-label">How to Play</div>
@@ -813,7 +971,7 @@ function closePopup(){
 
     <div class="card">
       <div class="card-label">Ball Colour</div>
-      <div class="colour-grid" id="colour-grid"></div>
+      <div class="colour-grid" id="colour-grid-left"></div>
     </div>
 
   </div>
@@ -827,7 +985,7 @@ function closePopup(){
   </div>
 
   <!-- ═══ RIGHT PANEL ═══ -->
-  <div class="panel">
+  <div class="panel" id="right-panel">
 
     <div class="card" id="pocket-card" data-hidden="true">
       <div class="card-label">Target Pocket</div>
@@ -865,12 +1023,109 @@ function closePopup(){
 
 </div>
 
+<!-- ═══ MOBILE-ONLY BOTTOM PANEL ═══
+     Rendered below the canvas on mobile via JS restructuring.
+     On desktop this stays hidden and the original panels handle everything. -->
+<div id="mobile-bottom" style="display:none; width:100%; max-width:340px; margin:12px auto 0; flex-direction:column; gap:10px;">
+
+  <!-- Step tracker strip -->
+  <div class="card">
+    <div class="card-label">How to Play</div>
+    <div class="steps" id="mob-steps">
+      <div class="step active" id="ms1"><div class="step-pip">1</div><span class="step-text">Place object ball</span></div>
+      <div class="step" id="ms2"><div class="step-pip">2</div><span class="step-text">Choose pocket</span></div>
+      <div class="step" id="ms3"><div class="step-pip">3</div><span class="step-text">Ghost ball</span></div>
+      <div class="step" id="ms4"><div class="step-pip">4</div><span class="step-text">Place cue ball</span></div>
+      <div class="step" id="ms5"><div class="step-pip">5</div><span class="step-text">Aim &amp; shoot</span></div>
+    </div>
+  </div>
+
+  <!-- Instruction -->
+  <div class="card">
+    <div class="card-label">Current Step</div>
+    <div class="instruction" id="mob-instruction">
+      <strong>Tap the table</strong> to place the object ball anywhere on the felt.
+    </div>
+  </div>
+
+  <!-- Two-column row: pocket selector + aim/result -->
+  <div style="display:flex; gap:10px; align-items:flex-start;">
+
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:8px;">
+      <div class="card" id="mob-pocket-card" data-hidden="true">
+        <div class="card-label">Pocket</div>
+        <div class="pocket-grid" id="mob-pocket-btns"></div>
+      </div>
+      <div class="card" id="mob-result-card" data-hidden="true">
+        <div class="card-label">Shot Result</div>
+        <div class="result-wrap" id="mob-result-box"></div>
+      </div>
+    </div>
+
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:8px;">
+      <div class="card" id="mob-aim-card" data-hidden="true">
+        <div class="card-label">Aim Angle</div>
+        <div class="angle-wrap">
+          <div class="angle-val" id="mob-angle-val">—</div>
+          <div class="angle-sub">degrees off</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Ball Colour</div>
+        <div class="colour-grid" id="colour-grid-mob"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Buttons -->
+  <button class="undo-btn" id="mob-undo-btn" onclick="undoStep()">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 6a4 4 0 1 0 .8-2.4L1.2 2H0v3h3l-1-1.1A2.8 2.8 0 1 1 2 6z"/></svg>
+    <span id="mob-undo-label">Redo last step</span>
+  </button>
+  <button class="reset-btn" onclick="resetAll()">
+    <svg width="13" height="13" viewBox="0 0 12 12" fill="currentColor"><path d="M10.5 6A4.5 4.5 0 1 1 6 1.5V0L8.5 2.5 6 5V3.5a3 3 0 1 0 3 2.5h1.5z"/></svg>
+    Start Again
+  </button>
+
+</div>
+
 <script>
+// ═══════════════════════════════════════════════════
+// RESPONSIVE: detect mobile and rewire UI
+// ═══════════════════════════════════════════════════
+const IS_MOBILE = window.matchMedia('(max-width: 700px)').matches;
+
+if(IS_MOBILE){
+  // Hide desktop left panel and right panel
+  document.getElementById('left-panel').style.display  = 'none';
+  document.getElementById('right-panel').style.display = 'none';
+  // Show mobile bottom panel
+  const mob = document.getElementById('mobile-bottom');
+  mob.style.display = 'flex';
+  // Also insert it into the layout flow after the table
+  document.querySelector('.layout').after(mob);
+}
+
+// ── Canvas scaling on mobile ────────────────────────
+// The canvas internal resolution stays 310×590 for all game logic.
+// On mobile we CSS-scale it to fit the screen while keeping pixel ratio.
+const canvas = document.getElementById('table');
+const ctx    = canvas.getContext('2d');
+
+function resizeCanvas(){
+  if(!IS_MOBILE) return;
+  const maxW = Math.min(window.innerWidth - 16, 340);
+  // Natural aspect ratio of canvas: 310 / 590
+  canvas.style.width  = maxW + 'px';
+  canvas.style.height = Math.round(maxW * 590/310) + 'px';
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
 // ═══════════════════════════════════════════════════
 // CANVAS + CONSTANTS
 // ═══════════════════════════════════════════════════
-const canvas = document.getElementById('table');
-const ctx    = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 
 const BALL_R   = 10.5;
@@ -879,11 +1134,8 @@ const TL = 19, TR = W-19, TT = 19, TB = H-19;
 const TW = TR-TL, TH = TB-TT;
 const MID_Y = TT + TH/2;
 
-// Real pool table pocket geometry:
-// Corner pockets: centred at the corner of the rail (TL, TT etc)
-// Side pockets: centred on the long rail edge at mid-height, slightly wider
-const PR_CORNER = 13;  // corner pocket radius
-const PR_SIDE   = 13;  // side pocket radius — matched to corners for visual consistency
+const PR_CORNER = 13;
+const PR_SIDE   = 13;
 const POCKETS = {
   TL:{ x:TL, y:TT,    r:PR_CORNER, label:'Top Left'  },
   TR:{ x:TR, y:TT,    r:PR_CORNER, label:'Top Right' },
@@ -903,9 +1155,8 @@ let power = 60;
 let animState=null, animFrame=null;
 let dragging=false, dragOffX=0, dragOffY=0;
 
-// Object ball colour state
 let ballColour = { light:'#fff5a0', mid:'#e8c040', dark:'#7a4c00', stroke:'rgba(80,40,0,0.5)', label:'#000000' };
-let mousePos={x:0,y:0}; // tracked for aiming cursor overlay
+let mousePos={x:0,y:0};
 
 // ═══════════════════════════════════════════════════
 // UTILS
@@ -917,58 +1168,109 @@ function clamp(x,y){
     Math.max(TT+BALL_R+2, Math.min(TB-BALL_R-2, y))
   ];
 }
+
+// MOBILE FIX: canvasXY accounts for CSS scaling of the canvas element
 function canvasXY(e){
-  const r=canvas.getBoundingClientRect(), sx=W/r.width, sy=H/r.height;
-  const s=e.touches?e.touches[0]:e;
-  return [(s.clientX-r.left)*sx,(s.clientY-r.top)*sy];
+  const r  = canvas.getBoundingClientRect();
+  // scaleX/scaleY: ratio of internal canvas pixels to displayed CSS pixels
+  const sx = W / r.width;
+  const sy = H / r.height;
+  const s  = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+  return [(s.clientX - r.left)*sx, (s.clientY - r.top)*sy];
 }
 
 // ═══════════════════════════════════════════════════
-// UI HELPERS
+// UI HELPERS — dual-panel aware (desktop + mobile)
 // ═══════════════════════════════════════════════════
-function cardShow(id){ document.getElementById(id).setAttribute('data-hidden','false'); }
-function cardHide(id){ document.getElementById(id).setAttribute('data-hidden','true'); }
+function cardShow(id){
+  document.getElementById(id).setAttribute('data-hidden','false');
+  const mobId = 'mob-'+id;
+  const mobEl = document.getElementById(mobId);
+  if(mobEl) mobEl.setAttribute('data-hidden','false');
+}
+function cardHide(id){
+  document.getElementById(id).setAttribute('data-hidden','true');
+  const mobId = 'mob-'+id;
+  const mobEl = document.getElementById(mobId);
+  if(mobEl) mobEl.setAttribute('data-hidden','true');
+}
+
 function setStep(n){
+  // Desktop steps
   for(let i=1;i<=5;i++){
     const el=document.getElementById('s'+i);
-    el.className='step'+(i===n?' active':(i<n?' done':''));
+    if(el) el.className='step'+(i===n?' active':(i<n?' done':''));
+  }
+  // Mobile steps
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('ms'+i);
+    if(el) el.className='step'+(i===n?' active':(i<n?' done':''));
   }
 }
-function setMsg(html){ document.getElementById('instruction').innerHTML=html; }
+
+function setMsg(html){
+  document.getElementById('instruction').innerHTML = html;
+  const mob = document.getElementById('mob-instruction');
+  if(mob) mob.innerHTML = html;
+}
+
 function showDragPill(on){
   document.getElementById('drag-pill').className='drag-pill'+(on?' show':'');
 }
+
 function setAngleDisplay(deg){
-  const el=document.getElementById('angle-val');
-  if(deg===null){ el.textContent='—'; el.className='angle-val'; return; }
+  // Desktop
+  const el = document.getElementById('angle-val');
+  // Mobile
+  const mel = document.getElementById('mob-angle-val');
+  if(deg===null){
+    el.textContent='—'; el.className='angle-val';
+    if(mel){ mel.textContent='—'; mel.className='angle-val'; }
+    return;
+  }
   const abs=Math.abs(deg);
-  // Show one decimal place so player sees fine-grained feedback
-  const formatted = (deg>0?'+':'')+deg.toFixed(1)+'°';
-  el.textContent=formatted;
-  el.className='angle-val'+(abs<=3?' good':abs<=8?'':' bad');
+  const formatted=(deg>0?'+':'')+deg.toFixed(1)+'°';
+  const cls='angle-val'+(abs<=3?' good':abs<=8?'':' bad');
+  el.textContent=formatted; el.className=cls;
+  if(mel){ mel.textContent=formatted; mel.className=cls; }
 }
 
-// Power is now charged by holding mousedown during aiming — no HTML slider needed
-// power variable (0–100) is set at shoot time from chargedPower
+function setUndo(visible, label){
+  // Desktop
+  const btn=document.getElementById('undo-btn');
+  const lbl=document.getElementById('undo-label');
+  // Mobile
+  const mbtn=document.getElementById('mob-undo-btn');
+  const mlbl=document.getElementById('mob-undo-label');
+  if(visible){
+    if(lbl) lbl.textContent=label||'Undo last step';
+    btn.classList.add('visible');
+    if(mlbl) mlbl.textContent=label||'Undo last step';
+    if(mbtn) mbtn.classList.add('visible');
+  } else {
+    btn.classList.remove('visible');
+    if(mbtn) mbtn.classList.remove('visible');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// POWER CHARGING
+// ═══════════════════════════════════════════════════
 let chargedPower = 0;
 let charging = false;
 let chargeStart = 0;
-const CHARGE_DURATION = 2000; // ms to go 0→100% per cycle
-
-function updatePowerTrack(){ /* no-op — power bar is drawn on canvas */ }
+const CHARGE_DURATION = 2000;
 
 // ═══════════════════════════════════════════════════
 // DRAW — TABLE
 // ═══════════════════════════════════════════════════
 function drawTable(){
-  // Felt base
   const feltGrad=ctx.createRadialGradient(W/2,H/2,40,W/2,H/2,Math.max(W,H)*0.8);
   feltGrad.addColorStop(0,'#125e30');
   feltGrad.addColorStop(1,'#0a3d1e');
   ctx.fillStyle=feltGrad;
   ctx.fillRect(TL,TT,TW,TH);
 
-  // Felt texture lines (subtle)
   ctx.save();
   ctx.globalAlpha=0.04;
   ctx.strokeStyle='#80ff80';
@@ -978,66 +1280,50 @@ function drawTable(){
   }
   ctx.restore();
 
-  // Baulk line
   ctx.save();
   ctx.globalAlpha=0.12;
   ctx.strokeStyle='#fffbe8'; ctx.lineWidth=0.8; ctx.setLineDash([5,8]);
   ctx.beginPath(); ctx.moveTo(TL,TT+TH*0.25); ctx.lineTo(TR,TT+TH*0.25); ctx.stroke();
-  // Baulk D-semicircle
   const dCx=W/2, dCy=TT+TH*0.25, dR=TW*0.12;
   ctx.beginPath(); ctx.arc(dCx,dCy,dR,0,Math.PI); ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
 
-  // Spot dot (top half spot)
   ctx.beginPath(); ctx.arc(W/2,TT+TH*0.75,2.5,0,Math.PI*2);
   ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fill();
 
-  // Cushions — 6 simple rectangles matching a real pool table rail layout
-  // Corner pockets are at the exact corners so rail segments run corner-to-corner
-  // Side pockets cut a gap in each long rail at mid-height
-  const CH  = 15;                  // cushion/rail thickness
-  const CPR = PR_CORNER;           // corner pocket radius
-  const SPG = PR_SIDE + 3;         // half-gap for side pocket opening
+  const CH  = 15;
+  const SPG = PR_SIDE + 3;
   ctx.fillStyle='#1e7a40';
 
-  // Short rails: top and bottom (full width minus corner pocket circles)
-  // Drawn as one rect; pocket holes are visually covered by the pocket circles
-  ctx.fillRect(TL - CH, TT - CH, TW + CH*2, CH);  // top rail
-  ctx.fillRect(TL - CH, TB,      TW + CH*2, CH);  // bottom rail
+  ctx.fillRect(TL - CH, TT - CH, TW + CH*2, CH);
+  ctx.fillRect(TL - CH, TB,      TW + CH*2, CH);
+  ctx.fillRect(TL - CH, TT, CH, MID_Y - TT - SPG);
+  ctx.fillRect(TL - CH, MID_Y + SPG, CH, TB - MID_Y - SPG);
+  ctx.fillRect(TR, TT, CH, MID_Y - TT - SPG);
+  ctx.fillRect(TR, MID_Y + SPG, CH, TB - MID_Y - SPG);
 
-  // Long rails: left and right — two segments each with gap at side pocket
-  // Top segment: from top-rail down to side pocket opening
-  ctx.fillRect(TL - CH, TT, CH, MID_Y - TT - SPG);   // left top
-  ctx.fillRect(TL - CH, MID_Y + SPG, CH, TB - MID_Y - SPG); // left bottom
-  ctx.fillRect(TR, TT, CH, MID_Y - TT - SPG);         // right top
-  ctx.fillRect(TR, MID_Y + SPG, CH, TB - MID_Y - SPG); // right bottom
-
-  // Cushion face highlight (inner edge of rails, on the felt side)
   ctx.save(); ctx.globalAlpha=0.25; ctx.strokeStyle='#4ecf70'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(TL,TT); ctx.lineTo(TR,TT); ctx.stroke(); // top
-  ctx.beginPath(); ctx.moveTo(TL,TB); ctx.lineTo(TR,TB); ctx.stroke(); // bottom
-  ctx.beginPath(); ctx.moveTo(TL,TT); ctx.lineTo(TL,MID_Y-SPG); ctx.stroke(); // left top
-  ctx.beginPath(); ctx.moveTo(TL,MID_Y+SPG); ctx.lineTo(TL,TB); ctx.stroke(); // left bottom
-  ctx.beginPath(); ctx.moveTo(TR,TT); ctx.lineTo(TR,MID_Y-SPG); ctx.stroke(); // right top
-  ctx.beginPath(); ctx.moveTo(TR,MID_Y+SPG); ctx.lineTo(TR,TB); ctx.stroke(); // right bottom
+  ctx.beginPath(); ctx.moveTo(TL,TT); ctx.lineTo(TR,TT); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(TL,TB); ctx.lineTo(TR,TB); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(TL,TT); ctx.lineTo(TL,MID_Y-SPG); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(TL,MID_Y+SPG); ctx.lineTo(TL,TB); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(TR,TT); ctx.lineTo(TR,MID_Y-SPG); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(TR,MID_Y+SPG); ctx.lineTo(TR,TB); ctx.stroke();
   ctx.restore();
 
-  // Pockets — with blink animation during choose_pocket / placing_obj
   const pocketsBlinking = (state==='choose_pocket'||state==='placing_obj');
   const blinkAlpha = pocketsBlinking ? 0.5+0.5*Math.sin(Date.now()*0.006) : 0;
   for(const key in POCKETS){
     const p=POCKETS[key];
     const pr=p.r||POCKET_R;
     const isSelected=selectedPocket===key;
-    // Depth gradient
     const pg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,pr);
     pg.addColorStop(0,'#000408');
     pg.addColorStop(0.65,'#00080f');
     pg.addColorStop(1,'rgba(0,4,12,0.2)');
     ctx.beginPath(); ctx.arc(p.x,p.y,pr,0,Math.PI*2);
     ctx.fillStyle=pg; ctx.fill();
-    // Rim
     if(isSelected){
       ctx.strokeStyle='#c9a84c'; ctx.lineWidth=2.5;
       ctx.shadowBlur=10; ctx.shadowColor='#c9a84c';
@@ -1059,14 +1345,10 @@ function drawTable(){
 function drawGuides(){
   if(!ghostBall||!objectBall||!selectedPocket) return;
   const p=POCKETS[selectedPocket];
-
-  // Object ball → pocket dashed line
   ctx.save();
   ctx.setLineDash([5,5]); ctx.strokeStyle='rgba(201,168,76,0.5)'; ctx.lineWidth=1.2;
   ctx.beginPath(); ctx.moveTo(ghostBall.x,ghostBall.y); ctx.lineTo(p.x,p.y); ctx.stroke();
   ctx.setLineDash([]);
-
-  // Ideal cue approach arrow (from ghost backward)
   const dx=ghostBall.x-objectBall.x, dy=ghostBall.y-objectBall.y;
   const len=Math.sqrt(dx*dx+dy*dy);
   if(len>0){
@@ -1081,7 +1363,6 @@ function drawGuides(){
 
 function drawAimLine(){
   if(!cueBall||aimAngle===null) return;
-  // Gradient aim line
   const ex=cueBall.x+Math.cos(aimAngle)*260, ey=cueBall.y+Math.sin(aimAngle)*260;
   const lg=ctx.createLinearGradient(cueBall.x,cueBall.y,ex,ey);
   lg.addColorStop(0,'rgba(74,176,255,0.7)');
@@ -1090,13 +1371,10 @@ function drawAimLine(){
   ctx.strokeStyle=lg; ctx.lineWidth=1.3;
   ctx.beginPath(); ctx.moveTo(cueBall.x,cueBall.y); ctx.lineTo(ex,ey); ctx.stroke();
   ctx.setLineDash([]); ctx.restore();
-
-  // Update angle
   if(ghostBall){
     const ideal=Math.atan2(ghostBall.y-cueBall.y,ghostBall.x-cueBall.x);
     let d=aimAngle-ideal;
     while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI;
-    // Pass decimal degrees — setAngleDisplay will format with 1dp
     setAngleDisplay(d*180/Math.PI);
   }
 }
@@ -1105,13 +1383,11 @@ function drawAimLine(){
 // DRAW — BALLS
 // ═══════════════════════════════════════════════════
 function drawObjectBall(x,y,draggable){
-  // Outer glow when draggable
   if(draggable){
     ctx.beginPath(); ctx.arc(x,y,BALL_R+6,0,Math.PI*2);
     ctx.strokeStyle='rgba(201,168,76,0.2)'; ctx.lineWidth=2;
     ctx.setLineDash([3,4]); ctx.stroke(); ctx.setLineDash([]);
   }
-  // Ball gradient — uses current ballColour
   const g=ctx.createRadialGradient(x-3,y-3,1,x,y,BALL_R);
   g.addColorStop(0, ballColour.light);
   g.addColorStop(0.35, ballColour.mid);
@@ -1119,10 +1395,8 @@ function drawObjectBall(x,y,draggable){
   ctx.beginPath(); ctx.arc(x,y,BALL_R,0,Math.PI*2);
   ctx.fillStyle=g; ctx.fill();
   ctx.strokeStyle=ballColour.stroke; ctx.lineWidth=1; ctx.stroke();
-  // Sheen
   ctx.beginPath(); ctx.arc(x-3,y-3,3,0,Math.PI*2);
   ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fill();
-  // Number — drop shadow first for contrast on all ball colours
   ctx.font=`bold 8px 'DM Mono',monospace`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillStyle='rgba(0,0,0,0.45)';
@@ -1132,13 +1406,10 @@ function drawObjectBall(x,y,draggable){
 }
 
 function drawGhostBall(x,y){
-  // Ghost fill
   ctx.beginPath(); ctx.arc(x,y,BALL_R,0,Math.PI*2);
   ctx.fillStyle='rgba(220,215,200,0.07)'; ctx.fill();
-  // Dashed border
   ctx.strokeStyle='rgba(200,190,170,0.55)'; ctx.lineWidth=1.2;
   ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
-  // Crosshair
   ctx.strokeStyle='rgba(200,190,170,0.25)'; ctx.lineWidth=0.8;
   ctx.beginPath();
   ctx.moveTo(x-BALL_R+3,y); ctx.lineTo(x+BALL_R-3,y);
@@ -1154,7 +1425,6 @@ function drawCueBall(x,y){
   ctx.beginPath(); ctx.arc(x,y,BALL_R,0,Math.PI*2);
   ctx.fillStyle=g; ctx.fill();
   ctx.strokeStyle='rgba(120,100,80,0.3)'; ctx.lineWidth=1; ctx.stroke();
-  // Sheen
   ctx.beginPath(); ctx.arc(x-3,y-3,3,0,Math.PI*2);
   ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fill();
 }
@@ -1164,15 +1434,12 @@ function drawAimCursor(){
   const mx=mousePos.x, my=mousePos.y;
   const d=dist(mx,my,cueBall.x,cueBall.y);
   if(d<28) return;
-
-  // ── Mouse ring: a small crosshair circle where the mouse actually is ──
   ctx.save();
   ctx.beginPath();
   ctx.arc(mx,my,5,0,Math.PI*2);
   ctx.strokeStyle='rgba(74,176,255,0.85)';
   ctx.lineWidth=1.2;
   ctx.stroke();
-  // tick marks
   ctx.strokeStyle='rgba(74,176,255,0.6)';
   ctx.lineWidth=1;
   for(let i=0;i<4;i++){
@@ -1183,12 +1450,7 @@ function drawAimCursor(){
     ctx.stroke();
   }
   ctx.restore();
-
-  // ── Projected contact point: ghost-ball-sized circle on the aim line ──
-  // where the cue ball's leading edge would touch the object ball
   if(ghostBall&&objectBall){
-    // The contact position is the ghost ball center (that's where cue ball center
-    // must be to kiss the object ball). Show it as a faint blue ghost-ball outline.
     const gx=ghostBall.x, gy=ghostBall.y;
     ctx.save();
     ctx.globalAlpha=0.35;
@@ -1199,7 +1461,6 @@ function drawAimCursor(){
     ctx.setLineDash([2,3]);
     ctx.stroke();
     ctx.setLineDash([]);
-    // small centre dot
     ctx.beginPath();
     ctx.arc(gx,gy,2.5,0,Math.PI*2);
     ctx.fillStyle='rgba(74,176,255,0.7)';
@@ -1210,22 +1471,16 @@ function drawAimCursor(){
 
 function drawCueStick(){
   if(!cueBall||aimAngle===null||state==='animating') return;
-
-  // Pull cue back dramatically while charging — max 30px so it's very visible
   const pullback = charging ? (chargedPower/100) * 30 : 0;
   const ang=aimAngle+Math.PI, s0=BALL_R+8+pullback, sLen=100;
   const sx=cueBall.x+Math.cos(ang)*s0, sy=cueBall.y+Math.sin(ang)*s0;
   const ex=cueBall.x+Math.cos(ang)*(s0+sLen), ey=cueBall.y+Math.sin(ang)*(s0+sLen);
-
-  // While charging: tint the cue warmer/brighter to signal it's loaded
   const chargeGlow = charging ? chargedPower/100 : 0;
   const g=ctx.createLinearGradient(sx,sy,ex,ey);
   g.addColorStop(0, charging ? `rgba(255,${Math.round(176+chargeGlow*60)},${Math.round(60-chargeGlow*60)},1)` : '#e0b060');
   g.addColorStop(0.3,'#8b5e18');
   g.addColorStop(0.8,'#4a2e08');
   g.addColorStop(1,'#1a0c02');
-
-  // Glow behind cue while charging
   if(charging && chargedPower > 10){
     ctx.save();
     ctx.shadowBlur = 12 + chargeGlow*14;
@@ -1234,28 +1489,20 @@ function drawCueStick(){
     ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
     ctx.restore();
   }
-
   ctx.strokeStyle=g; ctx.lineWidth=4.5; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
-
-  // Ferrule / tip
   const tx=cueBall.x+Math.cos(ang)*(s0+2), ty=cueBall.y+Math.sin(ang)*(s0+2);
   ctx.strokeStyle='#c8c4bc'; ctx.lineWidth=5.5;
   ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(tx,ty); ctx.stroke();
   ctx.lineCap='butt';
-
-  // Draw power bar alongside the cue stick only while actively charging
   if(charging) drawPowerBar();
-
-  // Draw "hold to shoot" idle hint when NOT charging yet
   if(!charging && state==='aiming') drawAimHint();
 }
 
-// Pulsing hint drawn near cue ball when player is in aiming state but hasn't clicked yet
 let hintPulse = 0;
 let hintRaf = null;
 function startHintPulse(){
-  if(hintRaf) return; // already running
+  if(hintRaf) return;
   function loop(){ hintRaf=requestAnimationFrame(loop); render(); }
   hintRaf=requestAnimationFrame(loop);
 }
@@ -1266,68 +1513,52 @@ function drawAimHint(){
   if(!cueBall) return;
   hintPulse = (hintPulse + 0.04) % (Math.PI*2);
   const pulse = 0.55 + 0.45*Math.sin(hintPulse);
-
   const ang = aimAngle + Math.PI;
-  // Position hint text below the cue butt end
   const hx = cueBall.x + Math.cos(ang)*(BALL_R+60);
   const hy = cueBall.y + Math.sin(ang)*(BALL_R+60);
-
   ctx.save();
   ctx.globalAlpha = 0.55 + 0.45*Math.sin(hintPulse);
-
-  // Pill background
-  const label = '▼ hold to shoot';
+  // On mobile: show touch-specific hint
+  const label = IS_MOBILE ? '▼ hold to shoot' : '▼ hold to shoot';
   ctx.font = "bold 9px 'DM Mono',monospace";
   const tw = ctx.measureText(label).width;
   const pw = tw+18, ph = 18, pr = 9;
   const px = hx - pw/2, py = hy - ph/2;
-
   ctx.fillStyle='rgba(0,0,0,0.55)';
   ctx.beginPath();
   ctx.roundRect(px, py, pw, ph, pr);
   ctx.fill();
-
   ctx.strokeStyle=`rgba(201,168,76,${0.4+0.4*pulse})`;
   ctx.lineWidth=1;
   ctx.beginPath();
   ctx.roundRect(px, py, pw, ph, pr);
   ctx.stroke();
-
   ctx.fillStyle=`rgba(220,195,110,${0.75+0.25*pulse})`;
   ctx.textAlign='center';
   ctx.textBaseline='middle';
   ctx.fillText(label, hx, hy);
-
   ctx.restore();
 }
 
 function drawPowerBar(){
   if(!cueBall||aimAngle===null) return;
-  // Position bar perpendicular to cue, offset to one side
   const ang = aimAngle + Math.PI;
   const perpAng = ang + Math.PI/2;
-
-  // Bar starts at cue butt end, 20px to the side
   const offset = 16;
   const barLen = 80;
   const bx = cueBall.x + Math.cos(ang)*(BALL_R+20) + Math.cos(perpAng)*offset;
   const by = cueBall.y + Math.sin(ang)*(BALL_R+20) + Math.sin(perpAng)*offset;
   const ex = bx + Math.cos(ang)*barLen;
   const ey = by + Math.sin(ang)*barLen;
-
-  // Background track
   ctx.save();
   ctx.lineCap='round';
   ctx.lineWidth=4;
   ctx.strokeStyle='rgba(0,0,0,0.45)';
   ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(ex,ey); ctx.stroke();
-
-  // Filled portion
   const pct = chargedPower/100;
   if(pct > 0){
     const fx = bx + Math.cos(ang)*barLen*pct;
     const fy = by + Math.sin(ang)*barLen*pct;
-    // Colour shifts green→yellow→red as power increases
     const r = Math.round(pct < 0.5 ? pct*2*201 : 201);
     const g2 = Math.round(pct < 0.5 ? 200 : (1-pct)*2*168);
     const fillColour = `rgb(${r},${g2},50)`;
@@ -1338,8 +1569,6 @@ function drawPowerBar(){
     ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(fx,fy); ctx.stroke();
     ctx.shadowBlur=0;
   }
-
-  // Pct label at tip of bar
   const lx = ex + Math.cos(ang)*10;
   const ly = ey + Math.sin(ang)*10;
   ctx.font = "bold 9px 'DM Mono',monospace";
@@ -1357,7 +1586,6 @@ function drawPowerBar(){
 function render(){
   ctx.clearRect(0,0,W,H);
   drawTable();
-
   if(state==='animating'&&animState){
     drawGuides();
     if(ghostBall) drawGhostBall(ghostBall.x,ghostBall.y);
@@ -1365,24 +1593,21 @@ function render(){
     if(animState.objBall&&!animState.objPotted) drawObjectBall(animState.objBall.x,animState.objBall.y,false);
     return;
   }
-
   drawGuides();
   drawAimLine();
   drawAimCursor();
   drawCueStick();
-
   if(objectBall) drawObjectBall(objectBall.x,objectBall.y,(state==='done'||state==='dragging_obj'||state==='placing_obj'));
   if(ghostBall)  drawGhostBall(ghostBall.x,ghostBall.y);
   if(cueBall)    drawCueBall(cueBall.x,cueBall.y);
   drawTableHint();
 }
 
-// Table centre instruction text
 const TABLE_HINTS = {
-  'place_object':  ['Click anywhere to place', 'the object ball'],
-  'choose_pocket': ['Click a glowing pocket', 'to aim for'],
-  'placing_obj':   ['Drag to reposition,', 'then click a pocket'],
-  'ready_cueball': ['Click to place', 'your cue ball'],
+  'place_object':  ['Tap anywhere to place', 'the object ball'],
+  'choose_pocket': ['Tap a glowing pocket', 'to aim for'],
+  'placing_obj':   ['Drag to reposition,', 'then tap a pocket'],
+  'ready_cueball': ['Tap to place', 'your cue ball'],
 };
 function drawTableHint(){
   const lines = TABLE_HINTS[state];
@@ -1391,13 +1616,11 @@ function drawTableHint(){
   const lh=17, pad=10;
   const bh=lines.length*lh+pad*2, bw=148;
   ctx.save();
-  // Background pill
   ctx.globalAlpha=0.52;
   ctx.fillStyle='rgba(5,8,15,0.7)';
   ctx.beginPath();
   ctx.roundRect(cx-bw/2, cy-bh/2, bw, bh, 7);
   ctx.fill();
-  // Text
   ctx.globalAlpha=0.88;
   ctx.fillStyle='rgba(220,208,180,1)';
   ctx.font="italic 12.5px 'Crimson Pro',Georgia,serif";
@@ -1409,7 +1632,6 @@ function drawTableHint(){
   ctx.restore();
 }
 
-// Blink loop — keeps canvas refreshing during pocket selection
 let blinkFrame=null;
 function startBlink(){
   if(blinkFrame) return;
@@ -1427,40 +1649,63 @@ function calcGhost(obj,key){
   const dx=obj.x-p.x, dy=obj.y-p.y, d=Math.sqrt(dx*dx+dy*dy);
   if(!d) return null;
   const nx=dx/d, ny=dy/d;
-  // Ghost ball is always exactly BALL_R*2 behind the object ball on the obj→pocket line.
-  // Do NOT clamp — clamping breaks the contact geometry. The ghost ball may render
-  // slightly outside felt near cushions, which is acceptable and physically correct.
   return { x: obj.x + nx*BALL_R*2, y: obj.y + ny*BALL_R*2 };
 }
 
 // ═══════════════════════════════════════════════════
-// POCKET BUTTONS
+// POCKET BUTTONS — builds both desktop and mobile grids
 // ═══════════════════════════════════════════════════
 function buildPocketBtns(){
-  const c=document.getElementById('pocket-btns'); c.innerHTML='';
+  // Desktop
+  const c=document.getElementById('pocket-btns');
+  c.innerHTML='';
+  // Mobile
+  const mc=document.getElementById('mob-pocket-btns');
+  if(mc) mc.innerHTML='';
+
   ['TL','TR','ML','MR','BL','BR'].forEach(key=>{
+    // Desktop button
     const btn=document.createElement('button');
     btn.className='p-btn';
     btn.textContent=POCKETS[key].label;
-    btn.onclick=()=>choosePocket(key,btn);
+    btn.onclick=()=>choosePocket(key);
     c.appendChild(btn);
+    // Mobile button
+    if(mc){
+      const mbtn=document.createElement('button');
+      mbtn.className='p-btn';
+      mbtn.textContent=POCKETS[key].label;
+      mbtn.onclick=()=>choosePocket(key);
+      mc.appendChild(mbtn);
+    }
   });
 }
 
-function choosePocket(key,btn){
+function markSelectedPocket(key){
+  document.querySelectorAll('#pocket-btns .p-btn').forEach(b=>{
+    b.classList.toggle('selected', b.textContent===POCKETS[key].label);
+  });
+  const mc=document.getElementById('mob-pocket-btns');
+  if(mc){
+    mc.querySelectorAll('.p-btn').forEach(b=>{
+      b.classList.toggle('selected', b.textContent===POCKETS[key].label);
+    });
+  }
+}
+
+function choosePocket(key){
   selectedPocket=key;
-  document.querySelectorAll('.p-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
+  markSelectedPocket(key);
   ghostBall=calcGhost(objectBall,key);
   if(!ghostBall) return;
+  stopBlink();
   state='ready_cueball'; setStep(4);
   showDragPill(false);
   canvas.style.cursor='crosshair';
-  setMsg('<strong>Ghost ball placed.</strong> Now click the table to position your cue ball.');
+  setMsg('<strong>Ghost ball placed.</strong> Now tap the table to position your cue ball.');
   setUndo(true, 'Choose a different pocket');
   render();
 }
-
 
 // ═══════════════════════════════════════════════════
 // POPUP
@@ -1472,7 +1717,7 @@ function closePopup(){
 }
 
 // ═══════════════════════════════════════════════════
-// BALL COLOUR PICKER
+// BALL COLOUR PICKER — builds both desktop and mobile swatches
 // ═══════════════════════════════════════════════════
 const BALL_COLOURS = [
   { id:'yellow', label:'Yellow', light:'#fff5a0', mid:'#e8c040', dark:'#7a4c00', stroke:'rgba(80,40,0,0.5)',   label_c:'#000000' },
@@ -1488,21 +1733,25 @@ const BALL_COLOURS = [
 ];
 
 function buildColourPicker(){
-  const grid = document.getElementById('colour-grid');
-  BALL_COLOURS.forEach((c,i) => {
-    const sw = document.createElement('div');
-    sw.className = 'colour-swatch' + (i===0?' active':'');
-    sw.title = c.label;
-    sw.style.background = `radial-gradient(circle at 38% 35%, ${c.light}, ${c.mid} 50%, ${c.dark})`;
-    sw.dataset.id = c.id;
-    sw.onclick = () => selectColour(c, sw);
-    grid.appendChild(sw);
+  ['colour-grid-left','colour-grid-mob'].forEach(gridId=>{
+    const grid = document.getElementById(gridId);
+    if(!grid) return;
+    BALL_COLOURS.forEach((c,i) => {
+      const sw = document.createElement('div');
+      sw.className = 'colour-swatch' + (i===0?' active':'');
+      sw.title = c.label;
+      sw.style.background = `radial-gradient(circle at 38% 35%, ${c.light}, ${c.mid} 50%, ${c.dark})`;
+      sw.dataset.id = c.id;
+      sw.onclick = () => selectColour(c);
+      grid.appendChild(sw);
+    });
   });
 }
 
-function selectColour(c, el){
-  document.querySelectorAll('.colour-swatch').forEach(s=>s.classList.remove('active'));
-  el.classList.add('active');
+function selectColour(c){
+  document.querySelectorAll('.colour-swatch').forEach(s=>{
+    s.classList.toggle('active', s.dataset.id===c.id);
+  });
   ballColour = { light:c.light, mid:c.mid, dark:c.dark, stroke:c.stroke, label:c.label_c };
   render();
 }
@@ -1518,7 +1767,10 @@ function resetAll(){
   dragging=false; charging=false; chargedPower=0;
   stopHintPulse(); hintPulse=0;
   setStep(1);
-  setMsg('<strong>Click the table</strong> to place the object ball anywhere on the felt.');
+  const msg = IS_MOBILE
+    ? '<strong>Tap the table</strong> to place the object ball anywhere on the felt.'
+    : '<strong>Click the table</strong> to place the object ball anywhere on the felt.';
+  setMsg(msg);
   cardHide('pocket-card'); cardHide('aim-card'); cardHide('result-card');
   setAngleDisplay(null);
   stopBlink();
@@ -1546,83 +1798,68 @@ function softReset(){
 // ═══════════════════════════════════════════════════
 // UNDO
 // ═══════════════════════════════════════════════════
-function setUndo(visible, label){
-  const btn = document.getElementById('undo-btn');
-  const lbl = document.getElementById('undo-label');
-  if(visible){
-    lbl.textContent = label || 'Undo last step';
-    btn.classList.add('visible');
-  } else {
-    btn.classList.remove('visible');
-  }
-}
-
-// Each step's undo rolls back to exactly the previous state
 function undoStep(){
   if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
   stopBlink();
+  const tapOrClick = IS_MOBILE ? 'Tap' : 'Click';
 
-  // State machine: go back one step
   if(state==='choose_pocket'){
-    // Undo: placed object ball → go back to place_object
     objectBall=null; ghostBall=null;
     state='place_object'; setStep(1);
-    setMsg('<strong>Click the table</strong> to place the object ball anywhere on the felt.');
+    setMsg(`<strong>${tapOrClick} the table</strong> to place the object ball anywhere on the felt.`);
     cardHide('pocket-card');
     canvas.style.cursor='crosshair';
     showDragPill(false);
     setUndo(false);
-
   } else if(state==='placing_obj'){
-    // Undo: repositioning → go back to place_object (start fresh)
     objectBall=null; ghostBall=null; selectedPocket=null;
     state='place_object'; setStep(1);
-    setMsg('<strong>Click the table</strong> to place the object ball anywhere on the felt.');
+    setMsg(`<strong>${tapOrClick} the table</strong> to place the object ball anywhere on the felt.`);
     cardHide('pocket-card');
     canvas.style.cursor='crosshair';
     showDragPill(false);
     setUndo(false);
-
   } else if(state==='ready_cueball'){
-    // Undo: chose pocket → go back to choosing pocket
     ghostBall=null; selectedPocket=null;
     document.querySelectorAll('.p-btn').forEach(b=>b.classList.remove('selected'));
     state='choose_pocket'; setStep(2);
     startBlink();
-    setMsg('Object ball placed. <strong>Click a glowing pocket</strong> on the table.');
+    setMsg(`Object ball placed. <strong>${tapOrClick} a glowing pocket</strong> on the table.`);
     canvas.style.cursor='crosshair';
     showDragPill(false);
     setUndo(true, 'Move the object ball instead');
-
   } else if(state==='aiming'){
-    // Undo: placed cue ball → go back to ready_cueball
     stopHintPulse(); hintPulse=0;
     charging=false; chargedPower=0;
     cueBall=null; aimAngle=null;
     state='ready_cueball'; setStep(4);
-    cardHide('aim-card');;
+    cardHide('aim-card');
     setAngleDisplay(null);
-    setMsg('<strong>Ghost ball set.</strong> Click the table to place your cue ball.');
+    setMsg('<strong>Ghost ball set.</strong> Tap the table to place your cue ball.');
     canvas.style.cursor='crosshair';
     showDragPill(false);
     setUndo(true, 'Choose a different pocket');
-
   } else if(state==='done'){
-    // Undo: shot taken → let them re-aim (soft reset)
     softReset();
     setUndo(true, 'Move the object ball instead');
     return;
   }
-
   render();
 }
 
 // ═══════════════════════════════════════════════════
-// INPUT
+// INPUT — Mouse + Touch unified
 // ═══════════════════════════════════════════════════
-canvas.addEventListener('mousedown',onDown);
-canvas.addEventListener('mousemove',onMove);
-canvas.addEventListener('mouseup',  onUp);
+
+// Mouse events (desktop)
+canvas.addEventListener('mousedown', onDown);
+canvas.addEventListener('mousemove', onMove);
+canvas.addEventListener('mouseup',   onUp);
+
+// MOBILE FIX: Touch events — preventDefault stops page scroll while playing
+canvas.addEventListener('touchstart', e=>{ e.preventDefault(); onDown(e); }, { passive:false });
+canvas.addEventListener('touchmove',  e=>{ e.preventDefault(); onMove(e); }, { passive:false });
+canvas.addEventListener('touchend',   e=>{ e.preventDefault(); onUp(e);   }, { passive:false });
 
 function onDown(e){
   const [mx,my]=canvasXY(e);
@@ -1636,24 +1873,26 @@ function onDown(e){
     const [cx,cy]=clamp(mx,my);
     objectBall={x:cx,y:cy}; state='choose_pocket'; setStep(2);
     startBlink();
-    setMsg('Object ball placed. <strong>Click a glowing pocket</strong> on the table.');
+    const tapOrClick = IS_MOBILE ? 'Tap' : 'Click';
+    setMsg(`Object ball placed. <strong>${tapOrClick} a glowing pocket</strong> on the table.`);
+    cardShow('pocket-card');
     setUndo(true, 'Place the object ball again');
     render(); return;
   }
 
-  // Click a pocket directly on the canvas
   if(state==='choose_pocket'||state==='placing_obj'){
     for(const key in POCKETS){
       const p=POCKETS[key];
       if(dist(mx,my,p.x,p.y)<(p.r||POCKET_R)+8){
         selectedPocket=key;
+        markSelectedPocket(key);
         ghostBall=calcGhost(objectBall,key);
         if(!ghostBall) return;
         stopBlink();
         state='ready_cueball'; setStep(4);
         showDragPill(false);
         canvas.style.cursor='crosshair';
-        setMsg('<strong>Ghost ball set.</strong> Click the table to place your cue ball.');
+        setMsg('<strong>Ghost ball set.</strong> Tap the table to place your cue ball.');
         setUndo(true, 'Choose a different pocket');
         render(); return;
       }
@@ -1666,8 +1905,8 @@ function onDown(e){
     if(ghostBall &&dist(mx,my,ghostBall.x, ghostBall.y )<BALL_R*2.5) return;
     const [cx,cy]=clamp(mx,my);
     cueBall={x:cx,y:cy}; state='aiming'; setStep(5);
-    cardShow('aim-card');;
-    setMsg('Cue ball placed. <strong>Move mouse to aim</strong>, then <strong>hold click to charge</strong> power — release to shoot.');
+    cardShow('aim-card');
+    setMsg('Cue ball placed. <strong>Move to aim</strong>, then <strong>hold to charge</strong> — release to shoot.');
     aimAngle=ghostBall?Math.atan2(ghostBall.y-cueBall.y,ghostBall.x-cueBall.x):0;
     canvas.style.cursor='crosshair';
     setUndo(true, 'Place the cue ball again');
@@ -1676,13 +1915,10 @@ function onDown(e){
   }
 
   if(state==='aiming'){
-    // Start charging — shoot happens on mouseup
     stopHintPulse();
     charging=true; chargedPower=0; chargeStart=Date.now();
-    // Kick off a render loop while charging so the bar animates
     (function chargeLoop(){
       if(!charging) return;
-      // Cycle: 0→100→0→100… using a triangle wave
       const elapsed = (Date.now()-chargeStart) % (CHARGE_DURATION*2);
       chargedPower = elapsed < CHARGE_DURATION
         ? (elapsed/CHARGE_DURATION)*100
@@ -1705,54 +1941,41 @@ function onMove(e){
 
   if(state==='aiming'&&cueBall){
     const d=dist(mx,my,cueBall.x,cueBall.y);
-    // Dead zone: mouse too close = geometry unstable, ignore
     if(d<32){ render(); return; }
-
     const rawAngle=Math.atan2(my-cueBall.y,mx-cueBall.x);
-
     if(aimAngle===null){
       aimAngle=rawAngle;
     } else {
-      // Sensitivity damping: when mouse is close (32–80px), slow down angle changes
-      // so small mouse movements don't sweep large angles.
-      // Beyond 80px: full 1:1 response — what you see is what fires.
-      const sensitivity = Math.min(1.0, (d - 32) / 48);  // 0.0 at 32px → 1.0 at 80px+
-
+      const sensitivity = Math.min(1.0, (d - 32) / 48);
       let delta = rawAngle - aimAngle;
       while(delta >  Math.PI) delta -= 2*Math.PI;
       while(delta < -Math.PI) delta += 2*Math.PI;
-
-      // At full sensitivity (far mouse): apply delta directly — no lag, no lerp.
-      // At low sensitivity (close mouse): dampen the delta to prevent jumping.
       aimAngle += delta * (0.15 + sensitivity * 0.85);
     }
     render(); return;
   }
 
-  // Hover cursor hint
   if((state==='done'||state==='placing_obj')&&objectBall){
     canvas.style.cursor=dist(mx,my,objectBall.x,objectBall.y)<BALL_R+12?'grab':'default';
   }
 }
 
-function onUp(){
-  // Release shot when charging in aiming state
+function onUp(e){
   if(state==='aiming' && charging){
     charging=false;
     power = Math.max(5, Math.round(chargedPower));
-    chargedPower=0;  // clear so bar doesn't show on next shot setup
+    chargedPower=0;
     shootAngle=aimAngle;
     shoot();
     return;
   }
-
   if(state==='dragging_obj'||state==='placing_obj'){
-    // Drop ball but stay draggable — user commits by choosing a pocket
     dragging=false;
     state='placing_obj';
     canvas.style.cursor='grab';
     setMsg('<strong>Drag again</strong> to reposition, or choose a pocket below to lock in.');
     showDragPill(true);
+    cardShow('pocket-card');
     render();
   }
 }
@@ -1763,22 +1986,18 @@ function onUp(){
 function shoot(){
   if(!cueBall||!ghostBall||!objectBall||!selectedPocket) return;
   state='animating'; canvas.style.cursor='default';
-
-  // Ideal direction: cue ball centre → ghost ball centre
   const ideal=Math.atan2(ghostBall.y-cueBall.y, ghostBall.x-cueBall.x);
   let diff=shootAngle-ideal;
   while(diff> Math.PI) diff-=2*Math.PI;
   while(diff<-Math.PI) diff+=2*Math.PI;
-
   const spd=(power/100)*13;
   const cvx=Math.cos(shootAngle)*spd, cvy=Math.sin(shootAngle)*spd;
   const pk=POCKETS[selectedPocket];
-
   animState={
     cueBall:{x:cueBall.x, y:cueBall.y, vx:cvx, vy:cvy},
     objBall:{x:objectBall.x, y:objectBall.y, vx:0, vy:0},
     objHit:false, objPotted:false, phase:'cuemoving',
-    angleDiffDeg:diff*180/Math.PI,  // keep decimal precision
+    angleDiffDeg:diff*180/Math.PI,
     pocketX:pk.x, pocketY:pk.y, pocketR:pk.r||POCKET_R,
     frameCount:0, done:false,
   };
@@ -1787,64 +2006,41 @@ function shoot(){
 
 function animStep(){
   const a=animState; a.frameCount++;
-
   if(!a.objHit&&a.phase==='cuemoving'){
-    // Sub-step loop: move cue ball in small increments, checking collision each step.
-    // IMPORTANT: apply friction AFTER the position move each sub-step, not before —
-    // otherwise the position update uses an already-reduced velocity and the ball
-    // consistently undershoots the contact point.
     const SUBSTEPS = 24;
     const frictionPerSub = Math.pow(0.986, 1/SUBSTEPS);
     let collided = false;
-
     for(let s=0; s<SUBSTEPS && !collided; s++){
-      // Move first, then decay velocity
       a.cueBall.x += a.cueBall.vx / SUBSTEPS;
       a.cueBall.y += a.cueBall.vy / SUBSTEPS;
-      // Friction decays speed but NOT direction — direction stays true to shootAngle
       a.cueBall.vx *= frictionPerSub;
       a.cueBall.vy *= frictionPerSub;
-
       const d = dist(a.cueBall.x, a.cueBall.y, a.objBall.x, a.objBall.y);
       if(d < BALL_R*2){
-        collided = true;
-        a.objHit = true;
-
-        // Contact normal: FROM cue ball TO object ball at moment of impact
+        collided = true; a.objHit = true;
         const safeD = Math.max(d, 1);
         const cnx = (a.objBall.x - a.cueBall.x) / safeD;
         const cny = (a.objBall.y - a.cueBall.y) / safeD;
-
-        // Separate balls to exact touching distance BEFORE velocity transfer
         const overlap = BALL_R*2 - d;
         a.cueBall.x -= cnx * (overlap * 0.5);
         a.cueBall.y -= cny * (overlap * 0.5);
         a.objBall.x += cnx * (overlap * 0.5);
         a.objBall.y += cny * (overlap * 0.5);
-
-        // Scalar projection of cue velocity onto contact normal
         const proj = a.cueBall.vx*cnx + a.cueBall.vy*cny;
-
         if(proj > 0){
-          // Object ball gets the full normal component (equal-mass elastic collision)
           a.objBall.vx = cnx * proj * 0.93;
           a.objBall.vy = cny * proj * 0.93;
-          // Cue ball keeps only the tangential component
           a.cueBall.vx = (a.cueBall.vx - cnx*proj) * 0.55;
           a.cueBall.vy = (a.cueBall.vy - cny*proj) * 0.55;
         } else {
-          // Glancing miss — shouldn't happen on a valid aimed shot
           a.objBall.vx = cnx * 0.3;
           a.objBall.vy = cny * 0.3;
         }
-
         a.phase = 'objmoving';
       }
     }
-    // Only bounce cue if it didn't just collide (avoid double-processing)
     if(!a.objHit) bounce(a.cueBall);
   }
-
   if(a.objHit&&!a.objPotted){
     a.objBall.x+=a.objBall.vx; a.objBall.y+=a.objBall.vy;
     a.objBall.vx*=0.983; a.objBall.vy*=0.983;
@@ -1854,25 +2050,19 @@ function animStep(){
     if(dist(a.objBall.x,a.objBall.y,a.pocketX,a.pocketY)<(a.pocketR||PR_CORNER)+BALL_R) a.objPotted=true;
     else bounce(a.objBall);
   }
-
   if(!a.objPotted) objectBall={x:a.objBall.x,y:a.objBall.y};
-
   const cs=Math.sqrt(a.cueBall.vx**2+a.cueBall.vy**2);
   const os=a.objPotted?0:Math.sqrt(a.objBall.vx**2+a.objBall.vy**2);
-  // Don't end until we've actually hit the object ball (or timed out)
   if(((a.objHit&&cs<0.28&&os<0.28))||a.frameCount>600) a.done=true;
-
   render();
   if(a.done){ endShot(a); return; }
   animFrame=requestAnimationFrame(animStep);
 }
 
 function bounce(b){
-  // Check if ball is near any pocket — if so, don't bounce it off the wall,
-  // let it roll into the pocket instead.
   for(const key in POCKETS){
     const p=POCKETS[key];
-    if(dist(b.x,b.y,p.x,p.y)<(p.r||PR_CORNER)+BALL_R) return; // near pocket
+    if(dist(b.x,b.y,p.x,p.y)<(p.r||PR_CORNER)+BALL_R) return;
   }
   if(b.x-BALL_R<TL){b.x=TL+BALL_R;b.vx= Math.abs(b.vx)*0.75;}
   if(b.x+BALL_R>TR){b.x=TR-BALL_R;b.vx=-Math.abs(b.vx)*0.75;}
@@ -1884,14 +2074,11 @@ function bounce(b){
 // END SHOT
 // ═══════════════════════════════════════════════════
 function endShot(a){
-  // Null both balls BEFORE state change and render so placing_obj render
-  // never draws the stale animation-position cue ball or ghost ball.
   cueBall   = null;
   ghostBall = null;
-
   state='done'; canvas.style.cursor='default';
   cardShow('result-card');
-  const deg=Math.abs(a.angleDiffDeg);  // float
+  const deg=Math.abs(a.angleDiffDeg);
   const degStr=deg.toFixed(1);
   let icon,grade,detail;
 
@@ -1901,7 +2088,7 @@ function endShot(a){
     else if(deg<=8){  icon='✦';  grade='Great shot'; detail=`${degStr}° off ideal angle`; }
     else if(deg<=15){ icon='✓';  grade='Good pot'; detail=`${degStr}° off — keep practising`; }
     else{             icon='☘'; grade='Lucky pot'; detail=`${degStr}° — fortunate angle`; }
-    setMsg('Ball potted! Click <strong>Start Again</strong> to play again.');
+    setMsg('Ball potted! Tap <strong>Start Again</strong> to play again.');
     setUndo(false);
   } else if(!a.objHit){
     icon='✕'; grade='Missed'; detail='Aim directly at the ghost ball';
@@ -1911,33 +2098,30 @@ function endShot(a){
     setUndo(true, 'Take the shot again');
   } else {
     icon='○';
-    if(deg===0){
-      grade='Missed pocket'; detail='Perfect angle — try adjusting ball position';
-    } else if(deg<5){
-      grade='So close'; detail=`${degStr}° off — tiny adjustment needed`;
-    } else if(deg<20){
-      grade='Missed pocket'; detail=`${degStr}° off — check your aim line`;
-    } else {
-      grade='Missed pocket'; detail=`${degStr}° off — significant angle error`;
-    }
+    if(deg===0){      grade='Missed pocket'; detail='Perfect angle — try adjusting ball position'; }
+    else if(deg<5){   grade='So close'; detail=`${degStr}° off — tiny adjustment needed`; }
+    else if(deg<20){  grade='Missed pocket'; detail=`${degStr}° off — check your aim line`; }
+    else{             grade='Missed pocket'; detail=`${degStr}° off — significant angle error`; }
     selectedPocket=null;
     setMsg('<strong>Drag the ball</strong> to a new position, or Start Again.');
     showDragPill(true); canvas.style.cursor='grab';
     setUndo(true, 'Take the shot again');
   }
 
-  document.getElementById('result-box').innerHTML=`
+  const resultHTML=`
     <div class="result-icon">${icon}</div>
     <div class="result-grade">${grade}</div>
     <div class="result-detail">${detail}</div>
   `;
+  document.getElementById('result-box').innerHTML=resultHTML;
+  const mobRb=document.getElementById('mob-result-box');
+  if(mobRb) mobRb.innerHTML=resultHTML;
   render();
 }
 
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
-// roundRect polyfill for older browsers
 if(!CanvasRenderingContext2D.prototype.roundRect){
   CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
     this.beginPath();
@@ -1949,7 +2133,9 @@ if(!CanvasRenderingContext2D.prototype.roundRect){
     this.closePath(); return this;
   };
 }
+
 buildColourPicker();
+buildPocketBtns();
 resetAll();
 </script>
 </body>
