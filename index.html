@@ -1635,50 +1635,158 @@ function drawTableHint(){
   ctx.restore();
 }
 
-// ── Mobile "Start Again" overlay drawn on canvas after a successful pot ──
+// ── Mobile "Start Again" overlay — animated, drawn on canvas after a pot ──
+var potOverlayStart = 0;  // timestamp when overlay first shown
+var potOverlayGrade = ''; // grade text to show ('Perfect', 'Great shot', etc.)
+var potOverlayDeg   = ''; // angle string e.g. '2.1°'
+
 function drawPotOverlay(){
-  const cx = W/2, cy = H/2;
+  var now = Date.now();
+  if(!potOverlayStart) potOverlayStart = now;
+  var elapsed = (now - potOverlayStart) / 1000; // seconds since shown
 
-  // Semi-transparent dark backdrop over whole table
+  // Fade in over 0.35s
+  var fadeIn = Math.min(1, elapsed / 0.35);
+  var cx = W/2, cy = H/2;
+
   ctx.save();
-  ctx.fillStyle = 'rgba(5,8,15,0.72)';
-  ctx.fillRect(TL, TT, TW, TH);
 
-  // Celebration emoji
-  ctx.font = '32px serif';
+  // ── Backdrop: blurred dark felt overlay ──
+  ctx.globalAlpha = fadeIn * 0.82;
+  ctx.fillStyle = 'rgba(4,6,14,1)';
+  ctx.fillRect(TL, TT, TW, TH);
+  ctx.globalAlpha = 1;
+
+  // ── Animated sparkle particles around the centre ──
+  var numSparkles = 8;
+  for(var i=0; i<numSparkles; i++){
+    var angle  = (i / numSparkles) * Math.PI * 2 + elapsed * 1.1;
+    var radius = 54 + 10 * Math.sin(elapsed * 2.5 + i);
+    var sx = cx + Math.cos(angle) * radius;
+    var sy = (cy - 30) + Math.sin(angle) * radius * 0.55;
+    var sparkAlpha = fadeIn * (0.4 + 0.6 * Math.abs(Math.sin(elapsed * 3 + i)));
+    ctx.globalAlpha = sparkAlpha;
+    // Alternating gold and white sparkles
+    ctx.fillStyle = (i % 2 === 0) ? '#e8cc7a' : '#ffffff';
+    ctx.font = (i % 3 === 0) ? '9px serif' : '7px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✦', sx, sy);
+  }
+  ctx.globalAlpha = 1;
+
+  // ── Gold glow ring behind emoji ──
+  var glowPulse = 0.7 + 0.3 * Math.sin(elapsed * 3.5);
+  ctx.globalAlpha = fadeIn * 0.35 * glowPulse;
+  var glowGrad = ctx.createRadialGradient(cx, cy-28, 0, cx, cy-28, 46);
+  glowGrad.addColorStop(0, '#e8cc7a');
+  glowGrad.addColorStop(1, 'rgba(201,168,76,0)');
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy-28, 46, 0, Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // ── Ball emoji — bounces in ──
+  var bounce = elapsed < 0.5
+    ? 1 - Math.pow(1 - elapsed/0.5, 3)   // ease-out-cubic enter
+    : 1 + 0.06 * Math.sin(elapsed * 4);   // gentle float
+  ctx.globalAlpha = fadeIn;
+  ctx.font = '38px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('🎱', cx, cy - 52);
+  ctx.save();
+  ctx.translate(cx, cy - 75);
+  ctx.scale(bounce, bounce);
+  ctx.fillText('🎱', 0, 0);
+  ctx.restore();
 
-  // "Ball Potted!" heading
-  ctx.font = "700 18px 'Playfair Display',serif";
-  ctx.fillStyle = '#e8cc7a';
-  ctx.fillText('Ball Potted!', cx, cy - 16);
+  // ── Grade label (Perfect / Great shot / etc.) ──
+  ctx.globalAlpha = Math.min(1, Math.max(0, (elapsed - 0.15) / 0.3));
+  ctx.font = "700 20px 'Playfair Display',serif";
+  // Colour varies by grade
+  var gradeColour = '#5ec87a'; // green default
+  if(potOverlayGrade === 'Perfect')       gradeColour = '#e8cc7a';
+  else if(potOverlayGrade === 'Great shot') gradeColour = '#a8e0ff';
+  else if(potOverlayGrade === 'Lucky pot')  gradeColour = '#ffb870';
+  ctx.fillStyle = gradeColour;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // Subtle text glow
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = gradeColour;
+  ctx.fillText(potOverlayGrade, cx, cy - 30);
+  ctx.shadowBlur = 0;
 
-  // Button pill — "Tap to Start Again"
-  const bw = 154, bh = 38, br = 19;
-  const bx = cx - bw/2, by = cy + 8;
+  // ── Angle detail ──
+  ctx.globalAlpha = Math.min(1, Math.max(0, (elapsed - 0.28) / 0.3));
+  ctx.font = "300 11px 'DM Mono',monospace";
+  ctx.fillStyle = 'rgba(200,190,160,0.75)';
+  ctx.fillText(potOverlayDeg + ' off ideal', cx, cy - 10);
 
-  // Gold pill background
-  ctx.fillStyle = '#c9a84c';
+  // ── Divider line ──
+  ctx.globalAlpha = Math.min(1, Math.max(0, (elapsed - 0.35) / 0.25)) * 0.4;
+  ctx.strokeStyle = '#c9a84c';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(cx - 60, cy + 5);
+  ctx.lineTo(cx + 60, cy + 5);
+  ctx.stroke();
+
+  // ── "TAP TO START AGAIN" button ──
+  var btnAlpha = Math.min(1, Math.max(0, (elapsed - 0.4) / 0.3));
+  ctx.globalAlpha = btnAlpha;
+
+  var bw = 170, bh = 42, br = 21;
+  var bx = cx - bw/2, by = cy + 16;
+
+  // Pulsing glow behind button
+  var btnPulse = 0.55 + 0.45 * Math.sin(elapsed * 2.8);
+  ctx.shadowBlur = 18 * btnPulse;
+  ctx.shadowColor = 'rgba(201,168,76,0.7)';
+
+  // Button gradient fill
+  var btnGrad = ctx.createLinearGradient(bx, by, bx, by+bh);
+  btnGrad.addColorStop(0, '#e8cc7a');
+  btnGrad.addColorStop(0.5, '#c9a84c');
+  btnGrad.addColorStop(1, '#a07830');
+  ctx.fillStyle = btnGrad;
   ctx.beginPath();
   ctx.roundRect(bx, by, bw, bh, br);
   ctx.fill();
+  ctx.shadowBlur = 0;
 
-  // Subtle inner highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  // Button inner highlight (glass shine)
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
   ctx.beginPath();
-  ctx.roundRect(bx+2, by+2, bw-4, bh/2-2, br-2);
+  ctx.roundRect(bx+3, by+3, bw-6, bh*0.45, br-2);
   ctx.fill();
 
-  // Button label
-  ctx.font = "700 11px 'DM Mono',monospace";
-  ctx.fillStyle = '#0c0b10';
-  ctx.letterSpacing = '0.1em';
-  ctx.fillText('TAP TO START AGAIN', cx, by + bh/2 + 1);
-  ctx.letterSpacing = '0';
+  // Button border
+  ctx.strokeStyle = 'rgba(255,240,180,0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(bx, by, bw, bh, br);
+  ctx.stroke();
 
+  // Button text
+  ctx.fillStyle = '#0c0b10';
+  ctx.font = "700 10.5px 'DM Mono',monospace";
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TAP ANYWHERE TO PLAY AGAIN', cx, by + bh/2 + 0.5);
+
+  // ── Subtle bottom hint ──
+  ctx.globalAlpha = Math.min(1, Math.max(0, (elapsed - 0.65) / 0.3)) * 0.45;
+  ctx.fillStyle = '#8a7a60';
+  ctx.font = "italic 10px 'Crimson Pro',serif";
+  ctx.fillText('tap anywhere on the table', cx, by + bh + 14);
+
+  ctx.globalAlpha = 1;
   ctx.restore();
+
+  // Keep re-rendering so sparkles and pulse animate
+  requestAnimationFrame(function(){ if(showPotOverlay) render(); });
 }
 
 let blinkFrame=null;
@@ -1816,6 +1924,9 @@ function resetAll(){
   dragging=false; charging=false; chargedPower=0;
   stopHintPulse(); hintPulse=0;
   showPotOverlay = false;
+  potOverlayStart = 0;
+  potOverlayGrade = '';
+  potOverlayDeg   = '';
   setStep(1);
   var msg = IS_MOBILE
     ? '<strong>Tap the table</strong> to place the object ball anywhere on the felt.'
@@ -2107,9 +2218,10 @@ function animStep(){
     else bounce(a.objBall);
   }
   if(!a.objPotted) objectBall={x:a.objBall.x,y:a.objBall.y};
-  const cs=Math.sqrt(a.cueBall.vx**2+a.cueBall.vy**2);
-  const os=a.objPotted?0:Math.sqrt(a.objBall.vx**2+a.objBall.vy**2);
-  if(((a.objHit&&cs<0.28&&os<0.28))||a.frameCount>600) a.done=true;
+  const cs=Math.sqrt(a.cueBall.vx*a.cueBall.vx+a.cueBall.vy*a.cueBall.vy);
+  const os=a.objPotted?0:Math.sqrt(a.objBall.vx*a.objBall.vx+a.objBall.vy*a.objBall.vy);
+  // End immediately on pot — don't wait for cue ball to stop rolling
+  if(a.objPotted || (a.objHit&&cs<0.28&&os<0.28) || a.frameCount>600) a.done=true;
   render();
   if(a.done){ endShot(a); return; }
   animFrame=requestAnimationFrame(animStep);
@@ -2146,7 +2258,12 @@ function endShot(a){
     else{             icon='☘'; grade='Lucky pot'; detail=`${degStr}° — fortunate angle`; }
     setMsg('Ball potted! Tap <strong>Start Again</strong> to play again.');
     setUndo(false);
-    if(IS_MOBILE) showPotOverlay = true;
+    if(IS_MOBILE){
+      showPotOverlay = true;
+      potOverlayStart = 0; // reset so fade-in plays fresh
+      potOverlayGrade = grade;
+      potOverlayDeg   = degStr + '\u00b0'; // degree symbol
+    }
   } else if(!a.objHit){
     icon='✕'; grade='Missed'; detail='Aim directly at the ghost ball';
     selectedPocket=null;
