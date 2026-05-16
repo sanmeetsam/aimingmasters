@@ -1474,29 +1474,54 @@ function drawAimCursor(){
 function drawCueStick(){
   if(!cueBall||aimAngle===null||state==='animating') return;
   const pullback = charging ? (chargedPower/100) * 30 : 0;
-  const ang=aimAngle+Math.PI, s0=BALL_R+8+pullback, sLen=100;
-  const sx=cueBall.x+Math.cos(ang)*s0, sy=cueBall.y+Math.sin(ang)*s0;
-  const ex=cueBall.x+Math.cos(ang)*(s0+sLen), ey=cueBall.y+Math.sin(ang)*(s0+sLen);
+  const ang = aimAngle + Math.PI;
+  const s0  = BALL_R + 8 + pullback;
+  const sLen = 100;
+
+  // Tip of stick (near cue ball ferrule)
+  const tx = cueBall.x + Math.cos(ang) * (s0 + 2);
+  const ty = cueBall.y + Math.sin(ang) * (s0 + 2);
+
+  // Raw butt end (may be off-canvas)
+  let ex = cueBall.x + Math.cos(ang) * (s0 + sLen);
+  let ey = cueBall.y + Math.sin(ang) * (s0 + sLen);
+
+  // Clamp butt end to canvas bounds so the stick is always visible
+  const PAD = 4;
+  if(ex < PAD)        ex = PAD;
+  if(ex > W - PAD)    ex = W - PAD;
+  if(ey < PAD)        ey = PAD;
+  if(ey > H - PAD)    ey = H - PAD;
+
+  // Start of stick (just behind tip, slightly away from ball)
+  const sx = cueBall.x + Math.cos(ang) * s0;
+  const sy = cueBall.y + Math.sin(ang) * s0;
+
   const chargeGlow = charging ? chargedPower/100 : 0;
-  const g=ctx.createLinearGradient(sx,sy,ex,ey);
-  g.addColorStop(0, charging ? `rgba(255,${Math.round(176+chargeGlow*60)},${Math.round(60-chargeGlow*60)},1)` : '#e0b060');
-  g.addColorStop(0.3,'#8b5e18');
-  g.addColorStop(0.8,'#4a2e08');
-  g.addColorStop(1,'#1a0c02');
+  const g = ctx.createLinearGradient(sx, sy, ex, ey);
+  g.addColorStop(0, charging
+    ? 'rgba(255,' + Math.round(176+chargeGlow*60) + ',' + Math.round(60-chargeGlow*60) + ',1)'
+    : '#e0b060');
+  g.addColorStop(0.3, '#8b5e18');
+  g.addColorStop(0.8, '#4a2e08');
+  g.addColorStop(1,   '#1a0c02');
+
   if(charging && chargedPower > 10){
     ctx.save();
-    ctx.shadowBlur = 12 + chargeGlow*14;
-    ctx.shadowColor = `rgba(255,${Math.round(160-chargeGlow*80)},30,${0.3+chargeGlow*0.5})`;
-    ctx.strokeStyle=g; ctx.lineWidth=4.5; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+    ctx.shadowBlur  = 12 + chargeGlow*14;
+    ctx.shadowColor = 'rgba(255,' + Math.round(160-chargeGlow*80) + ',30,' + (0.3+chargeGlow*0.5) + ')';
+    ctx.strokeStyle = g; ctx.lineWidth = 4.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
     ctx.restore();
   }
-  ctx.strokeStyle=g; ctx.lineWidth=4.5; ctx.lineCap='round';
-  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
-  const tx=cueBall.x+Math.cos(ang)*(s0+2), ty=cueBall.y+Math.sin(ang)*(s0+2);
-  ctx.strokeStyle='#c8c4bc'; ctx.lineWidth=5.5;
-  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(tx,ty); ctx.stroke();
-  ctx.lineCap='butt';
+  ctx.strokeStyle = g; ctx.lineWidth = 4.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+
+  // Ferrule / tip
+  ctx.strokeStyle = '#c8c4bc'; ctx.lineWidth = 5.5;
+  ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(tx, ty); ctx.stroke();
+  ctx.lineCap = 'butt';
+
   if(charging) drawPowerBar();
   if(!charging && state==='aiming') drawAimHint();
 }
@@ -1516,69 +1541,113 @@ function drawAimHint(){
   hintPulse = (hintPulse + 0.04) % (Math.PI*2);
   const pulse = 0.55 + 0.45*Math.sin(hintPulse);
   const ang = aimAngle + Math.PI;
-  const hx = cueBall.x + Math.cos(ang)*(BALL_R+60);
-  const hy = cueBall.y + Math.sin(ang)*(BALL_R+60);
-  ctx.save();
-  ctx.globalAlpha = 0.55 + 0.45*Math.sin(hintPulse);
-  // On mobile: show touch-specific hint
-  const label = IS_MOBILE ? '▼ hold to shoot' : '▼ hold to shoot';
+
+  // Place hint along the stick direction but clamp it to stay on-canvas
+  let hx = cueBall.x + Math.cos(ang)*(BALL_R+60);
+  let hy = cueBall.y + Math.sin(ang)*(BALL_R+60);
+
+  const label = '▼ hold to shoot';
   ctx.font = "bold 9px 'DM Mono',monospace";
   const tw = ctx.measureText(label).width;
-  const pw = tw+18, ph = 18, pr = 9;
+  const pw = tw+18, ph = 18;
+
+  // Clamp so pill stays inside canvas
+  hx = Math.max(TL + pw/2 + 4, Math.min(TR - pw/2 - 4, hx));
+  hy = Math.max(TT + ph/2 + 4, Math.min(TB - ph/2 - 4, hy));
+
+  const pr = 9;
   const px = hx - pw/2, py = hy - ph/2;
-  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.save();
+  ctx.globalAlpha = 0.55 + 0.45*Math.sin(hintPulse);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.beginPath();
   ctx.roundRect(px, py, pw, ph, pr);
   ctx.fill();
-  ctx.strokeStyle=`rgba(201,168,76,${0.4+0.4*pulse})`;
-  ctx.lineWidth=1;
+  ctx.strokeStyle = 'rgba(201,168,76,' + (0.4+0.4*pulse) + ')';
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.roundRect(px, py, pw, ph, pr);
   ctx.stroke();
-  ctx.fillStyle=`rgba(220,195,110,${0.75+0.25*pulse})`;
-  ctx.textAlign='center';
-  ctx.textBaseline='middle';
+  ctx.fillStyle = 'rgba(220,195,110,' + (0.75+0.25*pulse) + ')';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   ctx.fillText(label, hx, hy);
   ctx.restore();
 }
 
 function drawPowerBar(){
   if(!cueBall||aimAngle===null) return;
-  const ang = aimAngle + Math.PI;
-  const perpAng = ang + Math.PI/2;
-  const offset = 16;
-  const barLen = 80;
-  const bx = cueBall.x + Math.cos(ang)*(BALL_R+20) + Math.cos(perpAng)*offset;
-  const by = cueBall.y + Math.sin(ang)*(BALL_R+20) + Math.sin(perpAng)*offset;
-  const ex = bx + Math.cos(ang)*barLen;
-  const ey = by + Math.sin(ang)*barLen;
+
+  // ── Fixed vertical power bar pinned to the right rail, always visible ──
+  // This avoids it ever going off-screen regardless of cue angle or ball position.
+  const barLen  = 100;
+  const barW    = 6;
+  const margin  = 10;         // gap from right cushion edge
+  const bx      = TR - margin - barW; // fixed X: right side of felt
+  const barTop  = TT + (TH - barLen) / 2;
+  const barBot  = barTop + barLen;
+  const pct     = chargedPower / 100;
+
   ctx.save();
-  ctx.lineCap='round';
-  ctx.lineWidth=4;
-  ctx.strokeStyle='rgba(0,0,0,0.45)';
-  ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(ex,ey); ctx.stroke();
-  const pct = chargedPower/100;
+  ctx.lineCap = 'round';
+
+  // Track (background)
+  ctx.lineWidth   = barW;
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.moveTo(bx, barBot);
+  ctx.lineTo(bx, barTop);
+  ctx.stroke();
+
+  // Filled portion — grows upward from bottom
   if(pct > 0){
-    const fx = bx + Math.cos(ang)*barLen*pct;
-    const fy = by + Math.sin(ang)*barLen*pct;
-    const r = Math.round(pct < 0.5 ? pct*2*201 : 201);
+    const fillY = barBot - barLen * pct;
+    const r  = Math.round(pct < 0.5 ? pct*2*201 : 201);
     const g2 = Math.round(pct < 0.5 ? 200 : (1-pct)*2*168);
-    const fillColour = `rgb(${r},${g2},50)`;
-    ctx.lineWidth=4;
-    ctx.strokeStyle=fillColour;
-    ctx.shadowBlur = charging ? 6 : 0;
+    const fillColour = 'rgb(' + r + ',' + g2 + ',50)';
+    ctx.lineWidth   = barW;
+    ctx.strokeStyle = fillColour;
+    ctx.shadowBlur  = 8;
     ctx.shadowColor = fillColour;
-    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(fx,fy); ctx.stroke();
-    ctx.shadowBlur=0;
+    ctx.beginPath();
+    ctx.moveTo(bx, barBot);
+    ctx.lineTo(bx, fillY);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
   }
-  const lx = ex + Math.cos(ang)*10;
-  const ly = ey + Math.sin(ang)*10;
-  ctx.font = "bold 9px 'DM Mono',monospace";
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillStyle='rgba(0,0,0,0.5)';
-  ctx.fillText(Math.round(chargedPower)+'%', lx+0.5, ly+1);
-  ctx.fillStyle=chargedPower>70?'#ff9966':chargedPower>40?'#e8c840':'#c9e880';
-  ctx.fillText(Math.round(chargedPower)+'%', lx, ly);
+
+  // Track border outline so it's visible on the green felt
+  ctx.lineWidth   = barW + 2;
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.beginPath();
+  ctx.moveTo(bx, barBot);
+  ctx.lineTo(bx, barTop);
+  ctx.stroke();
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Percentage label — scaled serif for crisp rendering
+  const labelPct = Math.round(chargedPower) + '%';
+  const ly = barTop - 14;
+  ctx.textAlign     = 'center';
+  ctx.textBaseline  = 'middle';
+  ctx.save();
+  ctx.translate(bx, ly);
+  ctx.scale(0.75, 0.75);
+  ctx.font      = "700 15px 'Playfair Display',serif";
+  ctx.fillStyle = pct > 0.7 ? '#ff9966' : pct > 0.4 ? '#e8c840' : '#c9e880';
+  ctx.fillText(labelPct, 0, 0);
+  ctx.restore();
+
+  // "POWER" label at the bottom
+  ctx.save();
+  ctx.translate(bx, barBot + 10);
+  ctx.scale(0.72, 0.72);
+  ctx.font      = "400 11px 'DM Mono',monospace";
+  ctx.fillStyle = 'rgba(180,160,100,0.7)';
+  ctx.fillText('PWR', 0, 0);
+  ctx.restore();
+
   ctx.restore();
 }
 
@@ -1720,9 +1789,15 @@ function drawPotOverlay(){
 
   // ── Angle detail ──
   ctx.globalAlpha = Math.min(1, Math.max(0, (elapsed - 0.28) / 0.3));
-  ctx.font = "300 11px 'DM Mono',monospace";
   ctx.fillStyle = 'rgba(200,190,160,0.75)';
-  ctx.fillText(potOverlayDeg + ' off ideal', cx, cy - 10);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.save();
+  ctx.translate(cx, cy - 10);
+  ctx.scale(0.8, 0.8);
+  ctx.font = "300 14px 'Crimson Pro',Georgia,serif";
+  ctx.fillText(potOverlayDeg + ' off ideal', 0, 0);
+  ctx.restore();
 
   // ── Divider line ──
   ctx.globalAlpha = Math.min(1, Math.max(0, (elapsed - 0.35) / 0.25)) * 0.4;
@@ -1769,18 +1844,29 @@ function drawPotOverlay(){
   ctx.roundRect(bx, by, bw, bh, br);
   ctx.stroke();
 
-  // Button text
+  // Button text — use Crimson Pro at a larger rendered size for crisp anti-aliasing
+  // then scale down, which avoids the pixelation of tiny canvas fonts on mobile
   ctx.fillStyle = '#0c0b10';
-  ctx.font = "700 10.5px 'DM Mono',monospace";
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('TAP ANYWHERE TO PLAY AGAIN', cx, by + bh/2 + 0.5);
+  ctx.save();
+  ctx.translate(cx, by + bh/2 + 0.5);
+  ctx.scale(0.72, 0.72);
+  ctx.font = "600 18px 'Playfair Display',serif";
+  ctx.fillText('Tap anywhere to play again', 0, 0);
+  ctx.restore();
 
   // ── Subtle bottom hint ──
   ctx.globalAlpha = Math.min(1, Math.max(0, (elapsed - 0.65) / 0.3)) * 0.45;
   ctx.fillStyle = '#8a7a60';
-  ctx.font = "italic 10px 'Crimson Pro',serif";
-  ctx.fillText('tap anywhere on the table', cx, by + bh + 14);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.save();
+  ctx.translate(cx, by + bh + 14);
+  ctx.scale(0.78, 0.78);
+  ctx.font = "300 italic 16px 'Crimson Pro',Georgia,serif";
+  ctx.fillText('tap anywhere on the table', 0, 0);
+  ctx.restore();
 
   ctx.globalAlpha = 1;
   ctx.restore();
