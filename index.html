@@ -2306,8 +2306,11 @@ function animStep(){
   if(!a.objPotted) objectBall={x:a.objBall.x,y:a.objBall.y};
   const cs=Math.sqrt(a.cueBall.vx*a.cueBall.vx+a.cueBall.vy*a.cueBall.vy);
   const os=a.objPotted?0:Math.sqrt(a.objBall.vx*a.objBall.vx+a.objBall.vy*a.objBall.vy);
-  // End immediately on pot — don't wait for cue ball to stop rolling
-  if(a.objPotted || (a.objHit&&cs<0.28&&os<0.28) || a.frameCount>600) a.done=true;
+  // 1.5 px/frame is the visual threshold — below this the ball looks stopped on screen.
+  // Also end immediately on pot, or if the cue ball completely missed the object ball
+  // (objHit never became true) and the cue ball has slowed enough.
+  var visuallyStopped = cs < 1.5 && os < 1.5;
+  if(a.objPotted || visuallyStopped || a.frameCount > 400) a.done=true;
   render();
   if(a.done){ endShot(a); return; }
   animFrame=requestAnimationFrame(animStep);
